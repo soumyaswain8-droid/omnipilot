@@ -21,13 +21,14 @@ struct QueryView: View {
                 switch selectedTab {
                 case 0: LiveFeedTab(pipeline: pipeline, memoryStore: memoryStore)
                 case 1: AskTab(pipeline: pipeline, memoryStore: memoryStore)
-                case 2: MemoryBrowserTab(memoryStore: memoryStore)
-                case 3: SettingsTab(pipeline: pipeline)
+                case 2: TasksTab(pipeline: pipeline)
+                case 3: MemoryBrowserTab(memoryStore: memoryStore)
+                case 4: SettingsTab(pipeline: pipeline)
                 default: EmptyView()
                 }
             }
         }
-        .frame(width: 440, height: 560)
+        .frame(width: 460, height: 580)
         .background(Color(NSColor.windowBackgroundColor))
     }
 }
@@ -141,6 +142,7 @@ struct TabSelector: View {
     private let tabs = [
         (icon: "waveform", label: "Live"),
         (icon: "magnifyingglass", label: "Ask"),
+        (icon: "checklist", label: "Tasks"),
         (icon: "clock", label: "Memories"),
         (icon: "gearshape", label: "Settings"),
     ]
@@ -566,6 +568,210 @@ struct FilterPill: View {
                 .cornerRadius(10)
         }
         .buttonStyle(.borderless)
+    }
+}
+
+// MARK: - Tasks Tab
+
+struct TasksTab: View {
+    let pipeline: Pipeline
+
+    @State private var newTask = ""
+    @State private var isProcessing = false
+    @State private var confirmation = ""
+    @State private var tasks: [(id: Int64, action: String, description: String, recipient: String?, scheduledAt: Date)] = []
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Task input
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Tell OmniPilot what to do:")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                HStack(spacing: 8) {
+                    Image(systemName: "plus.circle")
+                        .foregroundColor(.purple)
+                        .font(.system(size: 14))
+                    TextField("Remind me to call Kishore tomorrow at 4 PM", text: $newTask)
+                        .textFieldStyle(.plain)
+                        .font(.system(size: 12))
+                        .onSubmit { createTask() }
+                    if isProcessing {
+                        ProgressView().scaleEffect(0.6)
+                    } else if !newTask.isEmpty {
+                        Button(action: createTask) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(.purple)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .padding(10)
+                .background(Color(NSColor.textBackgroundColor))
+                .cornerRadius(10)
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.purple.opacity(0.2), lineWidth: 1))
+
+                // Quick examples
+                HStack(spacing: 4) {
+                    Text("Try:").font(.system(size: 9)).foregroundColor(.secondary)
+                    QuickQueryChip(text: "Remind me in 30 min") {
+                        newTask = "Remind me to take a break in 30 minutes"
+                        createTask()
+                    }
+                    QuickQueryChip(text: "WhatsApp at 5 PM") {
+                        newTask = "Send WhatsApp to Kishore at 5 PM saying let's catch up"
+                        createTask()
+                    }
+                }
+            }
+            .padding(12)
+
+            // Confirmation
+            if !confirmation.isEmpty {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.system(size: 14))
+                    Text(confirmation)
+                        .font(.system(size: 11))
+                        .foregroundColor(.green)
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
+
+            Divider()
+
+            // Pending tasks list
+            if tasks.isEmpty {
+                VStack(spacing: 10) {
+                    Spacer()
+                    Image(systemName: "checklist")
+                        .font(.system(size: 30))
+                        .foregroundColor(.secondary.opacity(0.3))
+                    Text("No pending tasks")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Text("Type a reminder or task above")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary.opacity(0.6))
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity)
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 4) {
+                        ForEach(tasks, id: \.id) { task in
+                            TaskRow(
+                                task: task,
+                                onCancel: {
+                                    pipeline.cancelTask(task.id)
+                                    refreshTasks()
+                                }
+                            )
+                        }
+                    }
+                    .padding(10)
+                }
+            }
+        }
+        .onAppear { refreshTasks() }
+    }
+
+    private func createTask() {
+        guard !newTask.isEmpty, !isProcessing else { return }
+        isProcessing = true
+        confirmation = ""
+        let input = newTask
+        newTask = ""
+
+        Task {
+            do {
+                confirmation = try await pipeline.createTask(from: input)
+                refreshTasks()
+            } catch {
+                confirmation = "Error: \(error.localizedDescription)"
+            }
+            isProcessing = false
+
+            // Clear confirmation after 5 seconds
+            try? await Swift.Task.sleep(for: .seconds(5))
+            confirmation = ""
+        }
+    }
+
+    private func refreshTasks() {
+        tasks = pipeline.getPendingTasks()
+    }
+}
+
+struct TaskRow: View {
+    let task: (id: Int64, action: String, description: String, recipient: String?, scheduledAt: Date)
+    let onCancel: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Action icon
+            Image(systemName: actionIcon)
+                .font(.system(size: 14))
+                .foregroundColor(actionColor)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.description)
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(2)
+                HStack(spacing: 4) {
+                    if let recipient = task.recipient {
+                        Text(recipient)
+                            .font(.system(size: 9))
+                            .foregroundColor(.purple)
+                    }
+                    Text(timeUntil)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            Spacer()
+
+            Button(action: onCancel) {
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+            .buttonStyle(.borderless)
+            .help("Cancel task")
+        }
+        .padding(8)
+        .background(Color(NSColor.controlBackgroundColor))
+        .cornerRadius(6)
+    }
+
+    private var actionIcon: String {
+        switch task.action {
+        case "whatsapp": return "message.fill"
+        case "email": return "envelope.fill"
+        case "call": return "phone.fill"
+        default: return "bell.fill"
+        }
+    }
+
+    private var actionColor: Color {
+        switch task.action {
+        case "whatsapp": return .green
+        case "email": return .blue
+        case "call": return .orange
+        default: return .purple
+        }
+    }
+
+    private var timeUntil: String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: task.scheduledAt, relativeTo: Date())
     }
 }
 

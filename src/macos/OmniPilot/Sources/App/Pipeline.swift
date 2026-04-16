@@ -1,4 +1,5 @@
 import Foundation
+import SQLite
 
 /// The main OmniPilot pipeline: Audio -> VAD -> Whisper -> Memory -> LLM
 class Pipeline: @unchecked Sendable {
@@ -7,6 +8,9 @@ class Pipeline: @unchecked Sendable {
     let memory: MemoryStore
     let ollama: OllamaClient
     let vad: SimpleVAD
+    let taskStore: TaskStore
+    let scheduler: TaskScheduler
+    let intentParser: IntentParser
 
     private var isRunning = false
     private var speechBuffer: [Float] = []
@@ -21,6 +25,8 @@ class Pipeline: @unchecked Sendable {
     /// Callback for status updates
     var onStatusUpdate: ((String) -> Void)?
     var onTranscription: ((String) -> Void)?
+    /// Callback when a task is created
+    var onTaskCreated: ((String) -> Void)?
 
     init(audioCapture: AudioCapture, whisper: WhisperBridge, memory: MemoryStore, ollama: OllamaClient) {
         self.audioCapture = audioCapture
@@ -29,7 +35,24 @@ class Pipeline: @unchecked Sendable {
         self.ollama = ollama
         self.vad = SimpleVAD()
 
+        // Initialize task system using the same DB connection
+        // TaskStore needs its own connection since MemoryStore's is private
+        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        let omniDir = appSupport.appendingPathComponent("OmniPilot")
+        try? FileManager.default.createDirectory(at: omniDir, withIntermediateDirectories: true)
+        let dbPath = omniDir.appendingPathComponent("memory.sqlite").path
+        let taskDb = try! Connection(dbPath)
+        self.taskStore = TaskStore(db: taskDb)
+        self.scheduler = TaskScheduler(taskStore: taskStore)
+        self.intentParser = IntentParser(ollama: ollama)
+
         setupAudioPipeline()
+
+        // Start the task scheduler
+        scheduler.start()
+        scheduler.onTaskTriggered = { [weak self] action, desc in
+            self?.onStatusUpdate?("Task triggered: \(desc)")
+        }
     }
 
     private func setupAudioPipeline() {
@@ -155,10 +178,14 @@ class Pipeline: @unchecked Sendable {
         print("[Pipeline] Stopped")
     }
 
-    /// Query memories with natural language (uses semantic search when available)
-    /// Optionally speaks the answer aloud
+    /// Smart query: detects if input is a task/reminder or a memory question
     func query(_ question: String, speakAnswer: Bool = false) async throws -> String {
-        // Try semantic search first (embedding service), fall back to FTS5
+        // Check if this looks like a task/reminder command
+        if IntentParser.looksLikeTask(question) {
+            return try await createTask(from: question)
+        }
+
+        // Otherwise, search memories
         let results = await memory.semanticSearch(query: question, limit: 5)
 
         if results.isEmpty {
@@ -171,6 +198,58 @@ class Pipeline: @unchecked Sendable {
         let answer = try await ollama.answerQuestion(question: question, context: context)
         if speakAnswer { VoiceOutput.shared.speak(answer) }
         return answer
+    }
+
+    /// Create a scheduled task from natural language
+    func createTask(from input: String) async throws -> String {
+        guard let intent = try await intentParser.parse(input) else {
+            return "I couldn't understand that as a task. Try: 'Remind me to call Kishore tomorrow at 4 PM'"
+        }
+
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        let timeStr = formatter.string(from: intent.scheduledAt)
+
+        // Create the task
+        taskStore.create(
+            actionType: intent.action,
+            desc: intent.description,
+            msg: intent.message,
+            recipientName: intent.recipient,
+            phoneNumber: intent.phone,
+            scheduleDate: intent.scheduledAt,
+            confirmation: "Task set for \(timeStr)"
+        )
+
+        // Build confirmation message
+        var confirmation = ""
+        switch intent.action {
+        case "whatsapp":
+            confirmation = "Got it! I'll open WhatsApp to send \"\(intent.message ?? intent.description)\" to \(intent.recipient ?? "the contact") at \(timeStr)."
+        case "email":
+            confirmation = "Got it! I'll prepare an email to \(intent.recipient ?? "the recipient") at \(timeStr)."
+        case "call":
+            confirmation = "Got it! I'll remind you to call \(intent.recipient ?? "the contact") at \(timeStr)."
+        default:
+            confirmation = "Got it! I'll remind you: \(intent.description) at \(timeStr)."
+        }
+
+        // Speak confirmation
+        VoiceOutput.shared.speak(confirmation)
+        onTaskCreated?(confirmation)
+
+        return confirmation + "\n\nPending tasks: \(taskStore.pendingCount())"
+    }
+
+    /// Get all pending tasks
+    func getPendingTasks() -> [(id: Int64, action: String, description: String, recipient: String?, scheduledAt: Date)] {
+        taskStore.pendingTasks()
+    }
+
+    /// Cancel a task
+    func cancelTask(_ taskId: Int64) {
+        taskStore.cancel(taskId)
     }
 
     /// Generate daily summary — speaks it aloud
