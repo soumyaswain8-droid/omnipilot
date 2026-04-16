@@ -11,6 +11,8 @@ xcuserdata/
 
 # Models (large binary files — download via setup.sh)
 models/*.bin
+models/*.onnx
+models/minilm_*
 
 # OS
 .DS_Store

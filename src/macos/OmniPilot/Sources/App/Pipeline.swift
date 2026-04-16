@@ -92,8 +92,8 @@ class Pipeline: @unchecked Sendable {
                 print("[Pipeline] Transcribed: \(cleaned.prefix(80))...")
                 onTranscription?(cleaned)
 
-                // Store in memory
-                let _ = memory.store(text: cleaned, source: "mic", type: "transcription")
+                // Store in memory with embedding (async)
+                memory.storeWithEmbedding(text: cleaned, source: "mic", type: "transcription")
                 onStatusUpdate?("Stored. \(memory.count()) memories total.")
 
                 // Extract entities in background (don't block pipeline)
@@ -155,9 +155,10 @@ class Pipeline: @unchecked Sendable {
         print("[Pipeline] Stopped")
     }
 
-    /// Query memories with natural language
+    /// Query memories with natural language (uses semantic search when available)
     func query(_ question: String) async throws -> String {
-        let results = memory.search(query: question, limit: 5)
+        // Try semantic search first (embedding service), fall back to FTS5
+        let results = await memory.semanticSearch(query: question, limit: 5)
 
         if results.isEmpty {
             return "No memories found matching '\(question)'. Try different keywords, or make sure I've been listening to conversations about this topic."
@@ -222,10 +223,6 @@ class Pipeline: @unchecked Sendable {
     }
 
     private func showNotification(title: String, body: String) {
-        let notification = NSUserNotification()
-        notification.title = title
-        notification.informativeText = body
-        notification.soundName = NSUserNotificationDefaultSoundName
-        NSUserNotificationCenter.default.deliver(notification)
+        NotificationHelper.shared.send(title: title, body: body)
     }
 }

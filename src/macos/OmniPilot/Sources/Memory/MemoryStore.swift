@@ -161,4 +161,73 @@ class MemoryStore {
     func count() -> Int {
         return (try? db?.scalar(memories.count)) ?? 0
     }
+
+    /// Get the database file path (for embedding service)
+    var databasePath: String { dbPath }
+
+    // MARK: - Semantic Search (via embedding service on port 18385)
+
+    /// Store memory AND generate embedding (async, calls embedding service)
+    func storeWithEmbedding(text: String, source src: String = "mic", type: String = "transcription",
+                            participantList: [String]? = nil, topicList: [String]? = nil) {
+        guard let rowId = store(text: text, source: src, type: type,
+                                participantList: participantList, topicList: topicList) else { return }
+
+        // Fire-and-forget embedding via URLSession (non-blocking)
+        Self.requestEmbeddingFireAndForget(text: text, memoryId: rowId, dbPath: self.dbPath)
+    }
+
+    /// Call embedding service — fire and forget, non-blocking
+    private static func requestEmbeddingFireAndForget(text: String, memoryId: Int64, dbPath: String) {
+        guard let url = URL(string: "http://127.0.0.1:18385/embed_and_store") else { return }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 10
+
+        let body: [String: Any] = ["text": text, "memory_id": memoryId, "db_path": dbPath]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        // Fire and forget — we don't care about the response
+        URLSession.shared.dataTask(with: request) { _, _, _ in }.resume()
+    }
+
+    /// Semantic search via embedding service (falls back to FTS5 if service unavailable)
+    func semanticSearch(query: String, limit: Int = 5) async -> [(id: Int64, content: String, timestamp: Date, score: Double)] {
+        guard let url = URL(string: "http://127.0.0.1:18385/search") else {
+            return search(query: query, limit: limit)
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = 5
+
+        let body: [String: Any] = ["query": query, "db_path": dbPath, "limit": limit]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                return search(query: query, limit: limit)
+            }
+
+            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let results = json["results"] as? [[String: Any]] else {
+                return search(query: query, limit: limit)
+            }
+
+            return results.compactMap { r in
+                guard let id = r["id"] as? Int64,
+                      let content = r["content"] as? String,
+                      let score = r["score"] as? Double else { return nil }
+                let ts = (r["timestamp"] as? String).flatMap { ISO8601DateFormatter().date(from: $0) } ?? Date()
+                return (id, content, ts, score)
+            }
+        } catch {
+            // Embedding service not running — fall back to keyword search
+            return search(query: query, limit: limit)
+        }
+    }
 }

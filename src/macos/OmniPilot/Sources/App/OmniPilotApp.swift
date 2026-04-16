@@ -17,15 +17,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem?
     var popover: NSPopover?
     var pipeline: Pipeline?
+    var vadProcess: Process?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Start Silero VAD service
+        startVADService()
+
         // Create status bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem?.button {
             button.image = NSImage(systemSymbolName: "brain.head.profile", accessibilityDescription: "OmniPilot")
-            button.action = #selector(togglePopover)
+            button.action = #selector(statusBarClicked)
             button.target = self
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
 
         // Initialize pipeline
@@ -58,7 +63,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup popover
         let popover = NSPopover()
-        popover.contentSize = NSSize(width: 400, height: 500)
+        popover.contentSize = NSSize(width: 440, height: 560)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: QueryView(
@@ -69,54 +74,126 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         self.popover = popover
 
-        // Setup menu
-        setupMenu()
-
         // Register global hotkey (Cmd+Shift+O)
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 31 {
                 Task { @MainActor in
-                    self?.togglePopover()
+                    self?.showPopover()
                 }
             }
         }
 
         // Auto-start listening
         pipeline?.start()
-        print("[OmniPilot] Ready. Cmd+Shift+O to query. Click icon for menu.")
+        print("[OmniPilot] Ready. Left-click = popover, Right-click = menu, Cmd+Shift+O = query.")
     }
 
-    private func setupMenu() {
-        let menu = NSMenu()
-        menu.addItem(NSMenuItem(title: "Query (Cmd+Shift+O)", action: #selector(togglePopover), keyEquivalent: ""))
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Start Listening", action: #selector(startListening), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Stop Listening", action: #selector(stopListening), keyEquivalent: ""))
-        menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit OmniPilot", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+    @objc func statusBarClicked() {
+        guard let event = NSApp.currentEvent else { return }
 
-        statusItem?.menu = menu
+        if event.type == .rightMouseUp {
+            showMenu()
+        } else {
+            showPopover()
+        }
     }
 
-    @objc func togglePopover() {
-        statusItem?.menu = nil
+    private func showPopover() {
         guard let button = statusItem?.button, let popover = popover else { return }
         if popover.isShown {
             popover.performClose(nil)
         } else {
             popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-        }
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(500))
-            self.setupMenu()
+            NSApp.activate(ignoringOtherApps: true)
         }
     }
 
-    @objc func startListening() {
-        pipeline?.start()
+    private var isListening = true
+
+    private func showMenu() {
+        let menu = NSMenu()
+
+        // Toggle listening on/off
+        let toggleItem = NSMenuItem(
+            title: isListening ? "Turn Off Listening" : "Turn On Listening",
+            action: #selector(toggleListening),
+            keyEquivalent: "l"
+        )
+        toggleItem.image = NSImage(systemSymbolName: isListening ? "mic.slash" : "mic", accessibilityDescription: nil)
+        menu.addItem(toggleItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let queryItem = NSMenuItem(title: "Open Query (Cmd+Shift+O)", action: #selector(openPopoverFromMenu), keyEquivalent: "o")
+        queryItem.image = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
+        menu.addItem(queryItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let quitItem = NSMenuItem(title: "Quit OmniPilot", action: #selector(quitApp), keyEquivalent: "q")
+        quitItem.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
+        menu.addItem(quitItem)
+
+        statusItem?.menu = menu
+        statusItem?.button?.performClick(nil)
+        DispatchQueue.main.async { self.statusItem?.menu = nil }
     }
 
-    @objc func stopListening() {
-        pipeline?.stop()
+    @objc func toggleListening() {
+        isListening.toggle()
+        if isListening {
+            pipeline?.start()
+            statusItem?.button?.image = NSImage(systemSymbolName: "brain.head.profile", accessibilityDescription: "OmniPilot — Listening")
+        } else {
+            pipeline?.stop()
+            statusItem?.button?.image = NSImage(systemSymbolName: "brain", accessibilityDescription: "OmniPilot — Off")
+        }
+    }
+
+    @objc func openPopoverFromMenu() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.showPopover() }
+    }
+
+    @objc func quitApp() {
+        vadProcess?.terminate()
+        NSApplication.shared.terminate(nil)
+    }
+
+    // MARK: - VAD Service Management
+
+    private func startVADService() {
+        let scriptPath = Bundle.main.bundlePath
+            .replacingOccurrences(of: "/build/OmniPilot.app", with: "/src/services/vad_service.py")
+
+        // Also check project directory directly
+        let projectScript = NSHomeDirectory() + "/Documents/tinker/projects/omnipilot/src/services/vad_service.py"
+        let finalPath = FileManager.default.fileExists(atPath: scriptPath) ? scriptPath : projectScript
+
+        guard FileManager.default.fileExists(atPath: finalPath) else {
+            print("[OmniPilot] VAD service script not found, using energy-based VAD")
+            return
+        }
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["python3", finalPath]
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        do {
+            try process.run()
+            vadProcess = process
+            print("[OmniPilot] VAD service started (PID: \(process.processIdentifier))")
+            // Give it a moment to start
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                self?.pipeline?.vad.reconnectSilero()
+            }
+        } catch {
+            print("[OmniPilot] Failed to start VAD service: \(error)")
+        }
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        vadProcess?.terminate()
     }
 }
