@@ -1,0 +1,24 @@
+# Build artifacts
+build/
+.build/
+DerivedData/
+
+# Xcode
+*.xcuserdata
+xcuserdata/
+*.xcworkspace
+!*.xcodeproj
+
+# Models (large binary files — download via setup.sh)
+models/*.bin
+
+# OS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Temp
+*.wav
+*.tmp
