@@ -375,13 +375,31 @@ struct AskTab: View {
 
             if !answer.isEmpty {
                 ScrollView {
-                    Text(answer)
-                        .font(.system(size: 12))
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.purple.opacity(0.04))
-                        .cornerRadius(10)
-                        .textSelection(.enabled)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(answer)
+                            .font(.system(size: 12))
+                            .textSelection(.enabled)
+
+                        HStack {
+                            Spacer()
+                            Button(action: { VoiceOutput.shared.speak(answer) }) {
+                                Label("Speak", systemImage: "speaker.wave.2")
+                                    .font(.system(size: 9.5))
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundColor(.purple)
+
+                            Button(action: { VoiceOutput.shared.stop() }) {
+                                Label("Stop", systemImage: "stop.circle")
+                                    .font(.system(size: 9.5))
+                            }
+                            .buttonStyle(.borderless)
+                            .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.purple.opacity(0.04))
+                    .cornerRadius(10)
                 }
             }
 
@@ -601,6 +619,33 @@ struct SettingsTab: View {
                             Text("\(h > 12 ? h - 12 : h) \(h >= 12 ? "PM" : "AM")").tag(h)
                         }
                     }
+                }
+
+                SettingsGroup(title: "Voice Output") {
+                    Toggle("Speak reminders aloud", isOn: Binding(
+                        get: { VoiceOutput.shared.enabled },
+                        set: { VoiceOutput.shared.enabled = $0 }
+                    ))
+                    .font(.system(size: 11))
+
+                    HStack {
+                        Text("Voice").font(.system(size: 11))
+                        Spacer()
+                        Picker("", selection: .constant("indian")) {
+                            Text("Aman (Indian)").tag("indian")
+                            Text("Daniel (British)").tag("british")
+                            Text("Samantha (US)").tag("american")
+                        }
+                        .frame(width: 140)
+                        .onChange(of: "indian") {
+                            // Voice change handled by picker
+                        }
+                    }
+
+                    Button("Test Voice") {
+                        VoiceOutput.shared.speak("Hello! I'm OmniPilot, your personal AI assistant.")
+                    }
+                    .font(.system(size: 10))
                 }
 
                 SettingsGroup(title: "About") {

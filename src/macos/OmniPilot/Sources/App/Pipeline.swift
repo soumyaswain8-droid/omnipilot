@@ -156,19 +156,24 @@ class Pipeline: @unchecked Sendable {
     }
 
     /// Query memories with natural language (uses semantic search when available)
-    func query(_ question: String) async throws -> String {
+    /// Optionally speaks the answer aloud
+    func query(_ question: String, speakAnswer: Bool = false) async throws -> String {
         // Try semantic search first (embedding service), fall back to FTS5
         let results = await memory.semanticSearch(query: question, limit: 5)
 
         if results.isEmpty {
-            return "No memories found matching '\(question)'. Try different keywords, or make sure I've been listening to conversations about this topic."
+            let msg = "No memories found matching '\(question)'. Try different keywords, or make sure I've been listening to conversations about this topic."
+            if speakAnswer { VoiceOutput.shared.speak(msg) }
+            return msg
         }
 
         let context = results.map { $0.content }
-        return try await ollama.answerQuestion(question: question, context: context)
+        let answer = try await ollama.answerQuestion(question: question, context: context)
+        if speakAnswer { VoiceOutput.shared.speak(answer) }
+        return answer
     }
 
-    /// Generate daily summary
+    /// Generate daily summary — speaks it aloud
     func dailySummary() async throws -> String {
         let todays = memory.todaysMemories()
         if todays.isEmpty {
@@ -180,6 +185,9 @@ class Pipeline: @unchecked Sendable {
 
         // Store summary as a memory
         let _ = memory.store(text: summary, source: "system", type: "daily_summary")
+
+        // Speak it aloud
+        VoiceOutput.shared.speakSummary(summary)
 
         return summary
     }

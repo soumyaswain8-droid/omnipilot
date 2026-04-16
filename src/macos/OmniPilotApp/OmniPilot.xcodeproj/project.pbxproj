@@ -13,6 +13,7 @@
 		2403E3C1F863E4DA81D672AB /* OmniPilotApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C120F68BF73BA573D97C915 /* OmniPilotApp.swift */; };
 		519D3248FBEBAB29BF19C68C /* NotificationHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3E9C16972FF88D1D73C8D25 /* NotificationHelper.swift */; };
 		6EE7283A5D813F6F934D4B8A /* SimpleVAD.swift in Sources */ = {isa = PBXBuildFile; fileRef = C12563222555C9D4A4CD732C /* SimpleVAD.swift */; };
+		874A7CC288B3B80E8B10CA3B /* VoiceOutput.swift in Sources */ = {isa = PBXBuildFile; fileRef = F39350798F26C6EC237B4A08 /* VoiceOutput.swift */; };
 		A700F0B54766D4068A5BDEA6 /* MemoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38AD841C8A320855051BF3D9 /* MemoryStore.swift */; };
 		AC58274483FCE2B023EBCC29 /* OllamaClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983D81E370D6EA719B71CFDB /* OllamaClient.swift */; };
 		F8834E5054E35F5815E782B3 /* AudioCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDE2A4E73655D3CDB04135EE /* AudioCapture.swift */; };
@@ -29,6 +30,7 @@
 		983D81E370D6EA719B71CFDB /* OllamaClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OllamaClient.swift; sourceTree = "<group>"; };
 		C12563222555C9D4A4CD732C /* SimpleVAD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleVAD.swift; sourceTree = "<group>"; };
 		E3E9C16972FF88D1D73C8D25 /* NotificationHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationHelper.swift; sourceTree = "<group>"; };
+		F39350798F26C6EC237B4A08 /* VoiceOutput.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceOutput.swift; sourceTree = "<group>"; };
 		FDE2A4E73655D3CDB04135EE /* AudioCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioCapture.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -129,6 +131,7 @@
 				E3E9C16972FF88D1D73C8D25 /* NotificationHelper.swift */,
 				7C120F68BF73BA573D97C915 /* OmniPilotApp.swift */,
 				17A08B803A499D941C6C76CE /* Pipeline.swift */,
+				F39350798F26C6EC237B4A08 /* VoiceOutput.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -223,6 +226,7 @@
 				FFAAD344761533CE2C6BC7DD /* Pipeline.swift in Sources */,
 				1F6EE17698F80CEDE4F631A4 /* QueryView.swift in Sources */,
 				6EE7283A5D813F6F934D4B8A /* SimpleVAD.swift in Sources */,
+				874A7CC288B3B80E8B10CA3B /* VoiceOutput.swift in Sources */,
 				20BB20521B31B68DF863896E /* WhisperBridge.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

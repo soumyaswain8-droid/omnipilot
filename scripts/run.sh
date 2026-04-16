@@ -16,34 +16,46 @@ else
     echo "[1/4] Ollama: running"
 fi
 
-# 2. Silero VAD service
+# 2. Whisper server (persistent — loads model once)
+if ! curl -s http://localhost:18386/ &>/dev/null; then
+    echo "[2/5] Starting Whisper server (base.en)..."
+    whisper-server \
+        --model "$PROJECT/models/ggml-base.en.bin" \
+        --host 127.0.0.1 --port 18386 --threads 4 \
+        &>/dev/null &
+    sleep 2
+else
+    echo "[2/5] Whisper server: running"
+fi
+
+# 3. Silero VAD service
 if ! lsof -i :18384 &>/dev/null; then
-    echo "[2/4] Starting Silero VAD service..."
+    echo "[3/5] Starting Silero VAD service..."
     python3 "$PROJECT/src/services/vad_service.py" &>/dev/null &
     sleep 1
 else
-    echo "[2/4] VAD service: running"
+    echo "[3/5] VAD service: running"
 fi
 
 # 3. Embedding service
 if ! curl -s http://localhost:18385/health &>/dev/null; then
-    echo "[3/4] Starting Embedding service..."
+    echo "[4/5] Starting Embedding service..."
     python3 "$PROJECT/src/services/embedding_service.py" &>/dev/null &
     sleep 2
 else
-    echo "[3/4] Embedding service: running"
+    echo "[4/5] Embedding service: running"
 fi
 
 # 4. WhatsApp watcher (optional — only if folder exists)
 WA_DIR="$HOME/Documents/OmniPilot/WhatsApp"
 if [ -d "$WA_DIR" ] && ! pgrep -f "whatsapp_watcher.py" &>/dev/null; then
-    echo "[4/4] Starting WhatsApp watcher ($WA_DIR)..."
+    echo "[5/5] Starting WhatsApp watcher ($WA_DIR)..."
     python3 "$PROJECT/src/services/whatsapp_watcher.py" &>/dev/null &
 else
     if [ -d "$WA_DIR" ]; then
-        echo "[4/4] WhatsApp watcher: running"
+        echo "[5/5] WhatsApp watcher: running"
     else
-        echo "[4/4] WhatsApp watcher: skipped (create $WA_DIR to enable)"
+        echo "[5/5] WhatsApp watcher: skipped (create $WA_DIR to enable)"
     fi
 fi
 
