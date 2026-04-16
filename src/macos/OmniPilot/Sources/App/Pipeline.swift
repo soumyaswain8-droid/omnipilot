@@ -94,6 +94,12 @@ class Pipeline: @unchecked Sendable {
 
     /// Transcribe audio and store in memory
     private func transcribeAndStore(audio: [Float]) {
+        // CRITICAL: Skip if OmniPilot is speaking — prevents feedback loop
+        guard !VoiceOutput.shared.isSpeaking else {
+            print("[Pipeline] Skipping — OmniPilot is speaking (echo prevention)")
+            return
+        }
+
         Task {
             do {
                 let text = try await whisper.transcribe(audioSamples: audio)
@@ -115,24 +121,22 @@ class Pipeline: @unchecked Sendable {
                 print("[Pipeline] Transcribed: \(cleaned.prefix(80))...")
                 onTranscription?(cleaned)
 
-                // Store in memory with embedding (async)
-                memory.storeWithEmbedding(text: cleaned, source: "mic", type: "transcription")
-                onStatusUpdate?("Stored. \(memory.count()) memories total.")
-
-                // Extract entities in background (don't block pipeline)
-                Task.detached { [weak self] in
-                    guard let self = self else { return }
+                // Check if this is a voice COMMAND (task/reminder) before storing as memory
+                if IntentParser.looksLikeTask(cleaned) {
+                    print("[Pipeline] Detected voice command: \(cleaned)")
                     do {
-                        let entities = try await self.ollama.extractEntities(text: cleaned)
-                        if !entities.people.isEmpty || !entities.topics.isEmpty {
-                            // Update the memory with extracted entities
-                            // For now just log — will add DB update later
-                            print("[Pipeline] Entities — People: \(entities.people), Topics: \(entities.topics)")
-                        }
+                        let confirmation = try await self.createTask(from: cleaned)
+                        self.onTranscription?("✓ \(confirmation)")
+                        self.onStatusUpdate?("Task created!")
                     } catch {
-                        // Entity extraction is optional — don't fail the pipeline
-                        print("[Pipeline] Entity extraction skipped: \(error.localizedDescription)")
+                        print("[Pipeline] Task creation failed: \(error)")
+                        // Still store as memory if task creation fails
+                        memory.storeWithEmbedding(text: cleaned, source: "mic", type: "transcription")
                     }
+                } else {
+                    // Regular speech — store as memory
+                    memory.storeWithEmbedding(text: cleaned, source: "mic", type: "transcription")
+                    onStatusUpdate?("Stored. \(memory.count()) memories total.")
                 }
 
                 // Reset status after a moment

@@ -9,6 +9,9 @@ class VoiceOutput: @unchecked Sendable {
     private var currentVoice: AVSpeechSynthesisVoice?
     private var isEnabled = true
 
+    /// TRUE while OmniPilot is speaking — Pipeline checks this to mute mic input
+    private(set) var isSpeaking = false
+
     /// Available voice presets
     enum VoicePreset: String, CaseIterable {
         case system = "Default"
@@ -44,7 +47,7 @@ class VoiceOutput: @unchecked Sendable {
         print("[Voice] Set to: \(currentVoice?.name ?? "System Default")")
     }
 
-    /// Speak text aloud
+    /// Speak text aloud (mutes mic listening while speaking to prevent feedback loop)
     func speak(_ text: String, rate: Float = 0.5, pitch: Float = 1.0) {
         guard isEnabled else { return }
 
@@ -53,14 +56,25 @@ class VoiceOutput: @unchecked Sendable {
             synthesizer.stopSpeaking(at: .word)
         }
 
+        // Mark as speaking — Pipeline will ignore transcriptions while this is true
+        isSpeaking = true
+
         let utterance = AVSpeechUtterance(string: text)
         utterance.voice = currentVoice
-        utterance.rate = rate      // 0.0 (slowest) to 1.0 (fastest), 0.5 = normal
-        utterance.pitchMultiplier = pitch  // 0.5 to 2.0, 1.0 = normal
+        utterance.rate = rate
+        utterance.pitchMultiplier = pitch
         utterance.volume = 0.8
         utterance.preUtteranceDelay = 0.2
+        utterance.postUtteranceDelay = 0.5  // Extra silence after speaking
 
         synthesizer.speak(utterance)
+
+        // Reset isSpeaking after utterance finishes
+        // Estimate duration: ~3 chars per second at rate 0.5
+        let estimatedDuration = Double(text.count) / 6.0 + 1.5
+        DispatchQueue.global().asyncAfter(deadline: .now() + estimatedDuration) { [weak self] in
+            self?.isSpeaking = false
+        }
     }
 
     /// Speak a reminder
@@ -76,6 +90,7 @@ class VoiceOutput: @unchecked Sendable {
     /// Stop speaking
     func stop() {
         synthesizer.stopSpeaking(at: .immediate)
+        isSpeaking = false
     }
 
     /// Toggle voice on/off

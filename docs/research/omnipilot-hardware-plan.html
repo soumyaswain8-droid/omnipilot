@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniPilot Hardware - MindPilot Business Plan</title>
+<style>
+@page {
+  size: A4;
+  margin: 0;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: Charter, Georgia, 'Times New Roman', serif;
+  font-size: 11pt;
+  line-height: 1.65;
+  color: #1e293b;
+  background: #fff;
+}
+h1, h2, h3, h4 { font-family: 'Avenir Next', Avenir, Helvetica, Arial, sans-serif; color: #1e1b4b; }
+h1 { font-size: 28pt; font-weight: 700; margin-bottom: 0.5rem; }
+h2 { font-size: 18pt; font-weight: 600; margin: 2rem 0 0.8rem; padding-bottom: 0.4rem; border-bottom: 2px solid #e2e8f0; }
+h3 { font-size: 14pt; font-weight: 600; margin: 1.5rem 0 0.6rem; }
+h4 { font-size: 12pt; font-weight: 600; margin: 1rem 0 0.4rem; }
+p { margin-bottom: 0.7rem; }
+ul, ol { margin: 0.5rem 0 0.8rem 1.5rem; }
+li { margin-bottom: 0.3rem; }
+
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 25mm 22mm 20mm 25mm;
+  page-break-after: always;
+  position: relative;
+}
+.page:last-child { page-break-after: auto; }
+
+/* COVER PAGE */
+.cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 30%, #312e81 55%, #4f46e5 80%, #6366f1 100%);
+  color: #fff;
+  padding: 40mm 30mm;
+}
+.cover .badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  padding: 8px 24px;
+  border-radius: 30px;
+  font-family: 'Avenir Next', Avenir, sans-serif;
+  font-size: 11pt;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+}
+.cover h1 {
+  font-size: 42pt;
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: 0.8rem;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+.cover .subtitle {
+  font-size: 16pt;
+  color: #c7d2fe;
+  font-style: italic;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+}
+.cover .meta {
+  font-size: 11pt;
+  color: #a5b4fc;
+  line-height: 1.8;
+}
+.cover .meta strong { color: #e0e7ff; }
+.cover .divider {
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  margin: 2rem auto;
+  border-radius: 2px;
+}
+
+/* TABLES */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8rem 0 1.2rem;
+  font-size: 10pt;
+}
+th {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'Avenir Next', Avenir, sans-serif;
+  font-weight: 600;
+  font-size: 10pt;
+}
+td {
+  padding: 9px 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+tr:nth-child(even) td { background: #f8fafc; }
+tr:hover td { background: #f1f5f9; }
+
+/* CALLOUT BOXES */
+.callout {
+  padding: 14px 18px;
+  border-radius: 10px;
+  margin: 1rem 0;
+  page-break-inside: avoid;
+  border-left: 4px solid;
+}
+.callout-insight {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+.callout-insight .callout-title { color: #1d4ed8; }
+.callout-key {
+  background: #f0fdf4;
+  border-color: #22c55e;
+}
+.callout-key .callout-title { color: #16a34a; }
+.callout-warning {
+  background: #fef2f2;
+  border-color: #ef4444;
+}
+.callout-warning .callout-title { color: #dc2626; }
+.callout-analogy {
+  background: #faf5ff;
+  border-color: #a855f7;
+}
+.callout-analogy .callout-title { color: #7c3aed; }
+.callout-title {
+  font-family: 'Avenir Next', Avenir, sans-serif;
+  font-weight: 700;
+  font-size: 10.5pt;
+  margin-bottom: 6px;
+}
+
+/* STAT CARDS */
+.stat-row {
+  display: flex;
+  gap: 14px;
+  margin: 1.2rem 0;
+  flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1;
+  min-width: 140px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  page-break-inside: avoid;
+}
+.stat-number {
+  font-family: 'Avenir Next', Avenir, sans-serif;
+  font-size: 26pt;
+  font-weight: 700;
+  color: #4f46e5;
+  line-height: 1.1;
+}
+.stat-label {
+  font-size: 9pt;
+  color: #64748b;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* PHASE BANNER */
+.phase-banner {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: #fff;
+  padding: 18px 24px;
+  border-radius: 12px;
+  margin: 1.5rem 0 1rem;
+  font-family: 'Avenir Next', Avenir, sans-serif;
+}
+.phase-banner .phase-num {
+  font-size: 12pt;
+  font-weight: 600;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+.phase-banner .phase-title {
+  font-size: 20pt;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+/* TOC */
+.toc a {
+  text-decoration: none;
+  color: #1e293b;
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px dotted #cbd5e1;
+}
+.toc a:hover { color: #4f46e5; }
+.toc .toc-phase {
+  font-weight: 700;
+  color: #4f46e5;
+  font-size: 11pt;
+  margin-top: 0.8rem;
+  padding-top: 0.5rem;
+  border-bottom: none;
+}
+
+/* CHART CONTAINER */
+.chart-container {
+  text-align: center;
+  margin: 1.2rem 0;
+  page-break-inside: avoid;
+}
+.chart-container img {
+  display: block;
+  margin: 0 auto;
+}
+.chart-caption {
+  font-size: 9pt;
+  color: #64748b;
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* BACK COVER */
+.back-cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(135deg, #1e1b4b, #312e81, #4338ca);
+  color: #fff;
+  padding: 40mm 30mm;
+}
+.back-cover h2 { color: #e0e7ff; border: none; font-size: 22pt; }
+.back-cover p { color: #a5b4fc; }
+.back-cover .qr-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  margin: 1.5rem 0;
+  display: inline-block;
+}
+.back-cover .qr-box img {
+  width: 150px;
+  height: 150px;
+}
+
+/* FOOTER */
+.page-footer {
+  position: absolute;
+  bottom: 12mm;
+  left: 25mm;
+  right: 22mm;
+  font-size: 8pt;
+  color: #94a3b8;
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 6px;
+}
+.confidential {
+  color: #ef4444;
+  font-weight: 600;
+  font-size: 7.5pt;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<!-- ========== COVER PAGE ========== -->
+<div class="page cover">
+  <div class="badge">MindPilot Business Plan</div>
+  <h1>OmniPilot Hardware</h1>
+  <div class="subtitle">From Voice Assistant to Assistive AI Platform</div>
+  <div class="divider"></div>
+  <div class="meta">
+    <strong>Prepared for:</strong> Soumya Swain | Sidewall<br>
+    <strong>Date:</strong> April 17, 2026<br>
+    <strong>Version:</strong> v1.0.0 | Confidential
+  </div>
+</div>
+
+<!-- ========== TABLE OF CONTENTS ========== -->
+<div class="page">
+  <h1 style="font-size:24pt; margin-bottom:1.5rem;">Table of Contents</h1>
+  <div class="toc">
+    <div class="toc-phase">Phase 1: Strategy</div>
+    <a><span>1.1 The Hardware Vision</span><span>4</span></a>
+    <a><span>1.2 Three Hardware Verticals</span><span>4</span></a>
+    <a><span>1.3 Why Blind Assistive is #1 Priority</span><span>5</span></a>
+    <a><span>1.4 Market Sizing</span><span>6</span></a>
+    <a><span>1.5 Risks &amp; Mitigation</span><span>7</span></a>
+    <div class="toc-phase">Phase 2: Business Design</div>
+    <a><span>2.1 Revenue Model</span><span>8</span></a>
+    <a><span>2.2 Unit Economics</span><span>9</span></a>
+    <a><span>2.3 Manufacturing: India vs Shenzhen</span><span>9</span></a>
+    <a><span>2.4 Certification Requirements</span><span>10</span></a>
+    <a><span>2.5 Distribution Channels</span><span>10</span></a>
+    <a><span>2.6 Funding &amp; Grants</span><span>11</span></a>
+    <div class="toc-phase">Phase 3: Product Design</div>
+    <a><span>3.1 Blind Assistive Device Architecture</span><span>12</span></a>
+    <a><span>3.2 BLE Pendant (Omi Competitor)</span><span>13</span></a>
+    <a><span>3.3 Drone Voice Integration</span><span>14</span></a>
+    <a><span>3.4 Smart Home (Software-Only)</span><span>15</span></a>
+    <a><span>3.5 Build Path &amp; Roadmap</span><span>15</span></a>
+    <div class="toc-phase">Phase 4: Execution</div>
+    <a><span>4.1 90-Day Action Plan</span><span>16</span></a>
+    <a><span>4.2 Budget Allocation</span><span>17</span></a>
+    <a><span>4.3 Key Partnerships</span><span>17</span></a>
+    <a><span>4.4 Success Metrics</span><span>18</span></a>
+  </div>
+
+  <div style="margin-top:2rem;">
+    <div class="callout callout-analogy">
+      <div class="callout-title">About This Document</div>
+      <p>This business plan follows the <strong>MindPilot 4-Phase Framework</strong>: Strategy (Why &amp; Where) &rarr; Business Design (How It Works) &rarr; Product Design (What We Build) &rarr; Execution (Getting It Done). Each phase builds on the previous, ensuring no critical dimension is skipped.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Sidewall</span>
+  </div>
+</div>
+
+<!-- ========== PHASE 1: STRATEGY ========== -->
+<div class="page">
+  <div class="phase-banner">
+    <div class="phase-num">Phase 1</div>
+    <div class="phase-title">Strategy &mdash; The "Why &amp; Where"</div>
+  </div>
+
+  <h2>1.1 The Hardware Vision</h2>
+  <p>OmniPilot started as an AI voice assistant for productivity &mdash; a software companion that helps you think, remember, and act. But voice AI becomes transformative when paired with purpose-built hardware. A $10 BLE pendant streaming audio to your phone. A camera-equipped device guiding a blind person through a busy Indian street. A voice module letting a farmer command a crop-dusting drone in Hindi.</p>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">Core Insight</div>
+    <p>Software AI is a crowded race to the bottom. Hardware AI creates <strong>defensible moats</strong> &mdash; certification barriers, supply chain relationships, form factor IP, and distribution partnerships that software-only players cannot replicate overnight.</p>
+  </div>
+
+  <p>The hardware extension turns OmniPilot from a voice app into an <strong>assistive AI platform</strong> &mdash; one that can serve the visually impaired, agriculture, wearable computing, and smart home markets through a unified AI brain with specialized peripherals.</p>
+
+  <h2>1.2 Three Hardware Verticals</h2>
+
+  <table>
+    <tr>
+      <th>Vertical</th>
+      <th>Product</th>
+      <th>Price Range</th>
+      <th>Priority</th>
+    </tr>
+    <tr>
+      <td><strong>Blind Assistive AI</strong></td>
+      <td>Camera + voice pendant for visually impaired</td>
+      <td>Rs 5,000 &ndash; 13,000</td>
+      <td style="color:#16a34a;font-weight:700;">#1 &mdash; Highest</td>
+    </tr>
+    <tr>
+      <td><strong>Drone Voice Control</strong></td>
+      <td>Voice command module for agriculture drones</td>
+      <td>B2B licensing</td>
+      <td style="color:#f59e0b;font-weight:700;">#2 &mdash; Medium</td>
+    </tr>
+    <tr>
+      <td><strong>BLE Pendant</strong></td>
+      <td>Always-on audio companion (Omi competitor)</td>
+      <td>Rs 5,000 &ndash; 7,000</td>
+      <td style="color:#3b82f6;font-weight:700;">#3 &mdash; Steady</td>
+    </tr>
+  </table>
+
+  <div class="callout callout-analogy">
+    <div class="callout-title">Analogy</div>
+    <p>Think of OmniPilot as the brain (AI engine) and each hardware vertical as a body. The blind assistive device gives it eyes. The drone module gives it wings. The pendant gives it ears. Same brain, different superpowers.</p>
+  </div>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: system_architecture]</p>
+    <div class="chart-caption">Fig 1.1 &mdash; OmniPilot unified AI architecture across hardware verticals</div>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 1: Strategy</span>
+  </div>
+</div>
+
+<!-- PAGE: Blind Assistive Priority -->
+<div class="page">
+  <h2>1.3 Why Blind Assistive is #1 Priority</h2>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-number">60M+</div>
+      <div class="stat-label">Visually Impaired in India</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">80%</div>
+      <div class="stat-label">Have NO Assistive Tech</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">Rs 4,999</div>
+      <div class="stat-label">OmniPilot Lite Price</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">100%</div>
+      <div class="stat-label">ADIP Cost Coverage</div>
+    </div>
+  </div>
+
+  <p>India has the world's largest visually impaired population. The existing assistive devices &mdash; OrCam MyEye (Rs 2.5L), Envision Glasses (Rs 3.5L) &mdash; are priced for Western markets. OmniPilot Lite at Rs 4,999 is <strong>50x cheaper</strong>.</p>
+
+  <div class="callout callout-key">
+    <div class="callout-title">ADIP Scheme &mdash; The Game Changer</div>
+    <p>The Government of India's <strong>ADIP (Assistance to Disabled Persons) scheme</strong> covers 100% of assistive device costs under Rs 15,000. OmniPilot Lite at Rs 4,999 qualifies automatically. This means <strong>zero cost to the end user</strong> &mdash; the government pays. Tenders are placed through NGOs for 500&ndash;5,000 units at a time.</p>
+  </div>
+
+  <h3>Competitor Comparison</h3>
+  <table>
+    <tr>
+      <th>Feature</th>
+      <th>OrCam MyEye 3</th>
+      <th>Envision Glasses</th>
+      <th>OmniPilot Lite</th>
+    </tr>
+    <tr><td>Price</td><td>Rs 2,50,000</td><td>Rs 3,50,000</td><td style="color:#16a34a;font-weight:700;">Rs 4,999</td></tr>
+    <tr><td>Hindi Support</td><td>Limited</td><td>None</td><td style="color:#16a34a;font-weight:700;">Native Hindi + Regional</td></tr>
+    <tr><td>ADIP Eligible</td><td>No (too expensive)</td><td>No (too expensive)</td><td style="color:#16a34a;font-weight:700;">Yes (100% covered)</td></tr>
+    <tr><td>Obstacle Detection</td><td>No</td><td>Basic</td><td>MiDaS depth + alerts</td></tr>
+    <tr><td>Text Reading</td><td>OCR (English)</td><td>OCR (English)</td><td>PaddleOCR (Hindi/English)</td></tr>
+    <tr><td>Scene Description</td><td>Basic labels</td><td>LLM-powered</td><td>LLM + context memory</td></tr>
+    <tr><td>Form Factor</td><td>Glasses clip</td><td>Smart glasses</td><td>Clip-on pendant</td></tr>
+  </table>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_blind_market]</p>
+    <div class="chart-caption">Fig 1.2 &mdash; Visually impaired population and assistive tech penetration in India</div>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 1: Strategy</span>
+  </div>
+</div>
+
+<!-- PAGE: Market Sizing -->
+<div class="page">
+  <h2>1.4 Market Sizing</h2>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-number">$2.8B</div>
+      <div class="stat-label">TAM &mdash; India Assistive Tech</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">$340M</div>
+      <div class="stat-label">SAM &mdash; AI Assistive Devices</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">$8M</div>
+      <div class="stat-label">SOM &mdash; Year 3 Target</div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_opportunity_map]</p>
+    <div class="chart-caption">Fig 1.3 &mdash; OmniPilot hardware opportunity across verticals and price points</div>
+  </div>
+
+  <h3>Market Breakdown by Vertical</h3>
+  <table>
+    <tr>
+      <th>Vertical</th>
+      <th>India Market (2026)</th>
+      <th>Growth Rate</th>
+      <th>OmniPilot Addressable</th>
+    </tr>
+    <tr><td>Blind Assistive Tech</td><td>$890M</td><td>18% CAGR</td><td>$120M (ADIP + D2C)</td></tr>
+    <tr><td>Agriculture Drones</td><td>$1.2B</td><td>25% CAGR</td><td>$45M (voice add-on)</td></tr>
+    <tr><td>AI Wearables</td><td>$680M</td><td>32% CAGR</td><td>$175M (consumer pendant)</td></tr>
+    <tr><td>Smart Home (SW)</td><td>$3.5B</td><td>22% CAGR</td><td>$50M (voice control)</td></tr>
+  </table>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: portfolio_fit]</p>
+    <div class="chart-caption">Fig 1.4 &mdash; OmniPilot portfolio fit across software and hardware products</div>
+  </div>
+
+  <h2>1.5 Risks &amp; Mitigation</h2>
+  <table>
+    <tr>
+      <th>Risk</th>
+      <th>Severity</th>
+      <th>Mitigation</th>
+    </tr>
+    <tr><td>ADIP scheme changes or budget cuts</td><td style="color:#ef4444;">High</td><td>Diversify into D2C + Amazon; keep price under Rs 15K for any future scheme threshold</td></tr>
+    <tr><td>Hardware quality at low BOM</td><td style="color:#f59e0b;">Medium</td><td>Use proven SoCs (nRF52840, ESP32-S3); partner with VVDN for manufacturing QA</td></tr>
+    <tr><td>LLM API cost per user per month</td><td style="color:#f59e0b;">Medium</td><td>On-device inference for 80% of tasks; cloud LLM only for complex scene description</td></tr>
+    <tr><td>Competitors enter India market</td><td style="color:#3b82f6;">Low-Med</td><td>First-mover on Hindi/regional; ADIP certification moat; NGO distribution lock-in</td></tr>
+    <tr><td>BIS/WPC certification delays</td><td style="color:#f59e0b;">Medium</td><td>Start applications in Month 1; use pre-certified BLE modules (nRF52840 DK)</td></tr>
+  </table>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 1: Strategy</span>
+  </div>
+</div>
+
+<!-- ========== PHASE 2: BUSINESS DESIGN ========== -->
+<div class="page">
+  <div class="phase-banner">
+    <div class="phase-num">Phase 2</div>
+    <div class="phase-title">Business Design &mdash; The "How It Works"</div>
+  </div>
+
+  <h2>2.1 Revenue Model</h2>
+
+  <table>
+    <tr>
+      <th>Channel</th>
+      <th>Vertical</th>
+      <th>Pricing</th>
+      <th>Volume (Year 1)</th>
+    </tr>
+    <tr><td>ADIP Government Tenders</td><td>Blind Assistive</td><td>Rs 4,999&ndash;12,999/unit</td><td>2,000&ndash;5,000 units</td></tr>
+    <tr><td>Amazon / Flipkart D2C</td><td>Blind Assistive + Pendant</td><td>Rs 5,999&ndash;7,499</td><td>500&ndash;1,000 units</td></tr>
+    <tr><td>NGO Partnerships</td><td>Blind Assistive</td><td>Bulk at Rs 4,499</td><td>1,000&ndash;3,000 units</td></tr>
+    <tr><td>B2B Licensing</td><td>Drone Voice</td><td>Rs 15,000/license + royalty</td><td>50&ndash;200 licenses</td></tr>
+    <tr><td>GeM Portal</td><td>Blind Assistive</td><td>Rs 4,999&ndash;12,999</td><td>500&ndash;2,000 units</td></tr>
+  </table>
+
+  <div class="callout callout-key">
+    <div class="callout-title">Revenue Projection (Year 1)</div>
+    <p><strong>Conservative:</strong> Rs 1.5 Cr (3,000 blind assistive units via ADIP + 500 pendants)<br>
+    <strong>Optimistic:</strong> Rs 4.2 Cr (8,000 units across all channels + drone licensing)</p>
+  </div>
+
+  <h3>Revenue by Quarter (Year 1)</h3>
+  <table>
+    <tr>
+      <th>Quarter</th>
+      <th>Blind Assistive</th>
+      <th>Pendant</th>
+      <th>Drone</th>
+      <th>Total</th>
+    </tr>
+    <tr><td>Q1</td><td>Rs 0</td><td>Rs 0</td><td>Rs 0</td><td>Rs 0 (build phase)</td></tr>
+    <tr><td>Q2</td><td>Rs 25L (500 units)</td><td>Rs 3.5L (50 units)</td><td>Rs 0</td><td>Rs 28.5L</td></tr>
+    <tr><td>Q3</td><td>Rs 50L (1,000 units)</td><td>Rs 14L (200 units)</td><td>Rs 7.5L (50 lic)</td><td>Rs 71.5L</td></tr>
+    <tr><td>Q4</td><td>Rs 75L (1,500 units)</td><td>Rs 17.5L (250 units)</td><td>Rs 15L (100 lic)</td><td>Rs 107.5L</td></tr>
+  </table>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: data_flow]</p>
+    <div class="chart-caption">Fig 2.1 &mdash; Data flow from device through AI pipeline to user interaction</div>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 2: Business Design</span>
+  </div>
+</div>
+
+<!-- PAGE: Unit Economics + Manufacturing -->
+<div class="page">
+  <h2>2.2 Unit Economics</h2>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-number">Rs 1,350</div>
+      <div class="stat-label">BOM &mdash; BLE Pendant</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">Rs 2,400</div>
+      <div class="stat-label">BOM &mdash; Blind Assistive Lite</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">52%</div>
+      <div class="stat-label">Gross Margin (Pendant)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">48%</div>
+      <div class="stat-label">Gross Margin (Blind Lite)</div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_bom_comparison]</p>
+    <div class="chart-caption">Fig 2.2 &mdash; Bill of Materials comparison across product tiers</div>
+  </div>
+
+  <h3>BOM Breakdown &mdash; BLE Pendant</h3>
+  <table>
+    <tr><th>Component</th><th>Spec</th><th>Unit Cost</th></tr>
+    <tr><td>MCU</td><td>nRF52840 (BLE 5.0, ARM Cortex-M4)</td><td>Rs 250</td></tr>
+    <tr><td>Microphone</td><td>MEMS (ICS-43434 or equiv.)</td><td>Rs 60</td></tr>
+    <tr><td>Speaker</td><td>13mm driver + amplifier</td><td>Rs 80</td></tr>
+    <tr><td>Battery</td><td>200mAh LiPo + charge IC</td><td>Rs 120</td></tr>
+    <tr><td>PCB + Assembly</td><td>4-layer, SMT assembly</td><td>Rs 180</td></tr>
+    <tr><td>Enclosure</td><td>Injection-molded ABS, clip mount</td><td>Rs 150</td></tr>
+    <tr><td>Misc (antenna, USB-C, packaging)</td><td>Connectors, box, manual</td><td>Rs 160</td></tr>
+    <tr style="font-weight:700;background:#f0fdf4;"><td>Total COGS</td><td></td><td>Rs 1,000&ndash;1,350</td></tr>
+  </table>
+
+  <h2>2.3 Manufacturing: India vs Shenzhen</h2>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_mfg_cost]</p>
+    <div class="chart-caption">Fig 2.3 &mdash; Manufacturing cost comparison: India vs Shenzhen (with 22% import duty)</div>
+  </div>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">India Wins for Sub-5K Units</div>
+    <p>For volumes under 5,000 units, Indian manufacturing is <strong>cheaper after 22% import duty</strong> on China-imported electronics. Partners like VVDN Technologies (Gurugram), SFO Technologies (Kochi), and Optiemus Electronics (Noida) can handle full PCBA + assembly + testing.</p>
+  </div>
+
+  <table>
+    <tr><th>Factor</th><th>India (VVDN/SFO)</th><th>Shenzhen</th></tr>
+    <tr><td>MOQ</td><td>500&ndash;1,000 units</td><td>3,000&ndash;5,000 units</td></tr>
+    <tr><td>Lead Time</td><td>6&ndash;8 weeks</td><td>4&ndash;6 weeks</td></tr>
+    <tr><td>Import Duty</td><td>0%</td><td>22% on electronics</td></tr>
+    <tr><td>BIS/WPC Ease</td><td>Easier (domestic)</td><td>Requires import license</td></tr>
+    <tr><td>Communication</td><td>Same timezone, English</td><td>WeChat, timezone gap</td></tr>
+    <tr><td>Quality at low vol</td><td>Good (ISO-certified)</td><td>Variable at low MOQ</td></tr>
+  </table>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 2: Business Design</span>
+  </div>
+</div>
+
+<!-- PAGE: Certification + Distribution + Funding -->
+<div class="page">
+  <h2>2.4 Certification Requirements</h2>
+  <table>
+    <tr><th>Certification</th><th>Authority</th><th>Cost</th><th>Timeline</th><th>Required For</th></tr>
+    <tr><td>BIS (CRS)</td><td>Bureau of Indian Standards</td><td>Rs 2&ndash;3L</td><td>8&ndash;12 weeks</td><td>All electronic products sold in India</td></tr>
+    <tr><td>WPC (ETA)</td><td>Wireless Planning Commission</td><td>Rs 1&ndash;2L</td><td>4&ndash;8 weeks</td><td>BLE/WiFi radio devices</td></tr>
+    <tr><td>EMC/EMI</td><td>NABL-accredited lab</td><td>Rs 1&ndash;2L</td><td>2&ndash;4 weeks</td><td>All electronic devices</td></tr>
+    <tr><td>ADIP Listing</td><td>Ministry of Social Justice</td><td>Nominal</td><td>6&ndash;12 weeks</td><td>Government procurement eligibility</td></tr>
+    <tr style="font-weight:700;background:#fef2f2;"><td colspan="2">Total Budget</td><td>Rs 4&ndash;8L</td><td>3&ndash;4 months</td><td></td></tr>
+  </table>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">Certification Tip</div>
+    <p>Start BIS + WPC applications in <strong>Month 1</strong> while prototyping. Use pre-certified BLE modules (like nRF52840 DK with existing WPC approval) to reduce certification scope and timeline.</p>
+  </div>
+
+  <h2>2.5 Distribution Channels</h2>
+  <table>
+    <tr><th>Channel</th><th>Target Segment</th><th>Commission / Cost</th><th>Priority</th></tr>
+    <tr><td>ADIP / GeM Portal</td><td>Government institutions, NGOs</td><td>Tender-based, 0% commission</td><td style="color:#16a34a;font-weight:700;">Highest</td></tr>
+    <tr><td>NGO Partnerships (NAB, Saksham)</td><td>Visually impaired communities</td><td>Bulk discount (10&ndash;15%)</td><td style="color:#16a34a;font-weight:700;">High</td></tr>
+    <tr><td>Amazon.in / Flipkart</td><td>D2C consumers, families</td><td>15&ndash;20% commission</td><td style="color:#f59e0b;font-weight:700;">Medium</td></tr>
+    <tr><td>Optical shops / rehab centers</td><td>Walk-in visually impaired</td><td>20&ndash;25% margin</td><td style="color:#3b82f6;font-weight:700;">Low-Med</td></tr>
+    <tr><td>B2B direct (drone companies)</td><td>Drone manufacturers</td><td>Direct sales team</td><td style="color:#f59e0b;font-weight:700;">Medium</td></tr>
+  </table>
+
+  <h2>2.6 Funding &amp; Grants</h2>
+  <table>
+    <tr><th>Source</th><th>Amount</th><th>Type</th><th>Fit</th></tr>
+    <tr><td>BIRAC BIG Grant</td><td>Rs 50 Lakh</td><td>Non-dilutive grant</td><td style="color:#16a34a;">Excellent &mdash; assistive tech</td></tr>
+    <tr><td>DST PRAYAS</td><td>Rs 10 Lakh</td><td>Prototype grant</td><td style="color:#16a34a;">Excellent &mdash; hardware MVP</td></tr>
+    <tr><td>Startup India Seed Fund</td><td>Rs 20 Lakh</td><td>Equity/loan</td><td style="color:#f59e0b;">Good</td></tr>
+    <tr><td>Villgro / Social Alpha</td><td>Rs 25&ndash;50 Lakh</td><td>Impact investment</td><td style="color:#16a34a;">Excellent &mdash; social impact</td></tr>
+    <tr><td>NASSCOM Foundation</td><td>Rs 10&ndash;20 Lakh</td><td>Tech for Good grant</td><td style="color:#16a34a;">Excellent</td></tr>
+    <tr><td>Atal Innovation Mission</td><td>Rs 10 Lakh</td><td>Grant</td><td style="color:#f59e0b;">Good</td></tr>
+  </table>
+
+  <div class="callout callout-key">
+    <div class="callout-title">Funding Strategy</div>
+    <p>Apply for <strong>BIRAC BIG + DST PRAYAS simultaneously</strong> (non-competing). Combined Rs 60L covers prototyping, certification, and first 500-unit manufacturing run without equity dilution.</p>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 2: Business Design</span>
+  </div>
+</div>
+
+<!-- ========== PHASE 3: PRODUCT DESIGN ========== -->
+<div class="page">
+  <div class="phase-banner">
+    <div class="phase-num">Phase 3</div>
+    <div class="phase-title">Product Design &mdash; The "What We Build"</div>
+  </div>
+
+  <h2>3.1 Blind Assistive Device Architecture</h2>
+
+  <h3>Hardware Stack</h3>
+  <table>
+    <tr><th>Component</th><th>Spec</th><th>Purpose</th></tr>
+    <tr><td>Camera</td><td>OV5640 (5MP, autofocus)</td><td>Scene capture, text reading, object detection</td></tr>
+    <tr><td>Microphone</td><td>MEMS array (ICS-43434)</td><td>Voice input, ambient sound awareness</td></tr>
+    <tr><td>Speaker</td><td>Bone conduction / earpiece</td><td>Audio output without blocking ambient sound</td></tr>
+    <tr><td>Processor</td><td>ESP32-S3 (on-device) + phone (heavy AI)</td><td>Edge inference + cloud AI offload</td></tr>
+    <tr><td>Connectivity</td><td>BLE 5.0 + optional WiFi</td><td>Phone tethering, cloud API access</td></tr>
+    <tr><td>Battery</td><td>500mAh LiPo</td><td>6&ndash;8 hours mixed use</td></tr>
+    <tr><td>Form Factor</td><td>Chest clip pendant (45g)</td><td>Hands-free, camera at chest level</td></tr>
+  </table>
+
+  <h3>AI Pipeline</h3>
+  <table>
+    <tr><th>Layer</th><th>Model</th><th>Runs On</th><th>Latency</th></tr>
+    <tr><td>Object Detection</td><td>YOLOv8n (quantized INT8)</td><td>Phone (on-device)</td><td>&lt;50ms</td></tr>
+    <tr><td>Depth / Obstacles</td><td>MiDaS v2.1 Small</td><td>Phone (on-device)</td><td>&lt;80ms</td></tr>
+    <tr><td>Text Reading (OCR)</td><td>PaddleOCR (Hindi + English)</td><td>Phone (on-device)</td><td>&lt;200ms</td></tr>
+    <tr><td>Scene Description</td><td>LLM (GPT-4o mini / Gemini)</td><td>Cloud API</td><td>500ms&ndash;1.5s</td></tr>
+    <tr><td>Navigation</td><td>Google Maps + depth fusion</td><td>Phone + cloud</td><td>&lt;300ms</td></tr>
+    <tr><td>Voice I/O</td><td>Whisper (STT) + TTS</td><td>Phone / cloud</td><td>&lt;500ms</td></tr>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">80/20 On-Device Rule</div>
+    <p>80% of daily tasks (obstacle alerts, text reading, object identification) run <strong>entirely on-device</strong> with zero latency and zero API cost. Only complex scene description and navigation use cloud LLMs. This keeps the monthly API cost under <strong>Rs 50/user</strong>.</p>
+  </div>
+
+  <h3>Product Tiers</h3>
+  <table>
+    <tr><th>Tier</th><th>Features</th><th>Hardware</th><th>Price</th></tr>
+    <tr><td><strong>Lite</strong></td><td>Voice assistant + obstacle alerts + OCR</td><td>BLE pendant + phone mic/speaker</td><td>Rs 4,999</td></tr>
+    <tr><td><strong>Standard</strong></td><td>Lite + camera + scene description</td><td>Camera pendant + phone</td><td>Rs 12,999</td></tr>
+    <tr><td><strong>Pro</strong></td><td>Standard + navigation + depth</td><td>Stereo camera + haptic</td><td>Rs 24,999</td></tr>
+  </table>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 3: Product Design</span>
+  </div>
+</div>
+
+<!-- PAGE: BLE Pendant + Drone -->
+<div class="page">
+  <h2>3.2 BLE Pendant (Omi Competitor)</h2>
+
+  <p>The BLE pendant is OmniPilot's consumer wearable &mdash; an always-on AI companion that clips to your collar and streams audio to your phone. Think of it as AirPods for your brain: it listens, remembers, summarizes, and acts on your behalf.</p>
+
+  <h3>Specifications</h3>
+  <table>
+    <tr><th>Spec</th><th>Value</th></tr>
+    <tr><td>MCU</td><td>nRF52840 (64MHz ARM Cortex-M4, 256KB RAM)</td></tr>
+    <tr><td>Audio</td><td>MEMS mic + Opus codec @ 16kHz</td></tr>
+    <tr><td>Connectivity</td><td>BLE 5.0 (audio stream to phone app)</td></tr>
+    <tr><td>Battery</td><td>200mAh LiPo &mdash; 8&ndash;12 hours continuous</td></tr>
+    <tr><td>Form Factor</td><td>Clip / pendant, 12g, waterproof IP54</td></tr>
+    <tr><td>Charging</td><td>USB-C, 0&ndash;100% in 45 minutes</td></tr>
+    <tr><td>BOM Cost</td><td>Rs 500&ndash;800 ($6&ndash;10)</td></tr>
+    <tr><td>Retail Price</td><td>Rs 5,000&ndash;7,000</td></tr>
+  </table>
+
+  <div class="callout callout-analogy">
+    <div class="callout-title">Market Positioning</div>
+    <p><strong>Omi</strong> (US) sells at $89 (Rs 7,500) with English-only support. OmniPilot pendant at Rs 5,000 with <strong>Hindi + 10 Indian languages</strong>, plus integration with the OmniPilot AI brain (memory, tasks, calendar, smart home). Same hardware, better localization, lower price.</p>
+  </div>
+
+  <h2>3.3 Drone Voice Integration</h2>
+
+  <p>Indian agriculture is rapidly adopting drones for crop spraying, but pilots need extensive training to operate them. Voice control removes the training barrier: a farmer speaks in Hindi, and the drone follows.</p>
+
+  <h3>Voice Command Pipeline</h3>
+  <table>
+    <tr><th>Stage</th><th>Technology</th><th>Example</th></tr>
+    <tr><td>Voice Input</td><td>Whisper / IndicWhisper STT</td><td>"10 meter upar jao" (go up 10m)</td></tr>
+    <tr><td>Intent Parsing</td><td>NLU classifier + slot filling</td><td>Intent: ASCEND, altitude: 10m</td></tr>
+    <tr><td>Command Translation</td><td>MAVLink protocol generator</td><td>MAV_CMD_NAV_TAKEOFF alt=10</td></tr>
+    <tr><td>Safety Validation</td><td>Geofence + whitelist + dead man's</td><td>Check: within boundary? Command allowed?</td></tr>
+    <tr><td>Execution</td><td>Drone autopilot (PX4/ArduPilot)</td><td>Execute validated MAVLink command</td></tr>
+  </table>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_drone_market]</p>
+    <div class="chart-caption">Fig 3.1 &mdash; India agriculture drone market and voice control opportunity</div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-title">Safety-First Design</div>
+    <p>Voice-controlled drones require <strong>triple safety layers</strong>: (1) Geofence boundaries that cannot be overridden by voice, (2) Command whitelist &mdash; only pre-approved commands accepted, (3) Dead man's switch &mdash; drone hovers/lands if voice link drops for &gt;5 seconds.</p>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 3: Product Design</span>
+  </div>
+</div>
+
+<!-- PAGE: Smart Home + Roadmap -->
+<div class="page">
+  <h2>3.4 Smart Home (Software-Only, Phase 5)</h2>
+
+  <p>Smart home integration is a <strong>software-only play</strong> &mdash; no custom hardware needed. OmniPilot's voice AI connects to existing smart home ecosystems through established protocols.</p>
+
+  <table>
+    <tr><th>Integration</th><th>Coverage</th><th>Effort</th></tr>
+    <tr><td>Tuya API</td><td>80% of Indian smart home devices (WiFi bulbs, plugs, cameras)</td><td>2&ndash;3 weeks SDK integration</td></tr>
+    <tr><td>HomeKit / Matter</td><td>Apple ecosystem (Thread, WiFi)</td><td>4&ndash;6 weeks certification</td></tr>
+    <tr><td>Google Home</td><td>Google Nest ecosystem</td><td>2&ndash;3 weeks API integration</td></tr>
+    <tr><td>Alexa Skills Kit</td><td>Amazon Echo ecosystem</td><td>2&ndash;3 weeks skill development</td></tr>
+  </table>
+
+  <div class="callout callout-key">
+    <div class="callout-title">Why Phase 5?</div>
+    <p>Smart home integration is <strong>low effort, high retention</strong> &mdash; once a user controls their home through OmniPilot, switching costs are high. But it is not a differentiator for initial adoption. Ship it after the core hardware products establish the user base.</p>
+  </div>
+
+  <h2>3.5 Build Path &amp; Roadmap</h2>
+
+  <div class="chart-container">
+    <p style="color:red;">[Chart missing: hw_roadmap]</p>
+    <div class="chart-caption">Fig 3.2 &mdash; OmniPilot hardware development roadmap across 5 phases</div>
+  </div>
+
+  <table>
+    <tr><th>Phase</th><th>Timeline</th><th>Deliverable</th><th>Revenue Start</th></tr>
+    <tr><td><strong>Phase 1:</strong> Android App</td><td>Month 1&ndash;2</td><td>Blind assistive app (software MVP)</td><td>Free beta</td></tr>
+    <tr><td><strong>Phase 2:</strong> BLE Pendant</td><td>Month 2&ndash;4</td><td>Pendant prototype + beta testing</td><td>Month 5</td></tr>
+    <tr><td><strong>Phase 3:</strong> Camera Pendant</td><td>Month 4&ndash;6</td><td>Blind assistive hardware device</td><td>Month 7</td></tr>
+    <tr><td><strong>Phase 4:</strong> Drone Module</td><td>Month 6&ndash;9</td><td>Voice control integration kit</td><td>Month 10</td></tr>
+    <tr><td><strong>Phase 5:</strong> Smart Home</td><td>Month 9&ndash;12</td><td>Tuya + HomeKit integrations</td><td>Month 10</td></tr>
+  </table>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 3: Product Design</span>
+  </div>
+</div>
+
+<!-- ========== PHASE 4: EXECUTION ========== -->
+<div class="page">
+  <div class="phase-banner">
+    <div class="phase-num">Phase 4</div>
+    <div class="phase-title">Execution &mdash; The "Getting It Done"</div>
+  </div>
+
+  <h2>4.1 90-Day Action Plan</h2>
+
+  <h3>Month 1: Software MVP + Certifications</h3>
+  <table>
+    <tr><th>Week</th><th>Action</th><th>Owner</th><th>Output</th></tr>
+    <tr><td>W1</td><td>Android app scaffold + camera integration</td><td>Dev team</td><td>Basic camera-to-AI pipeline</td></tr>
+    <tr><td>W2</td><td>YOLOv8n + PaddleOCR on-device integration</td><td>ML engineer</td><td>Object detection + Hindi OCR working</td></tr>
+    <tr><td>W3</td><td>Voice I/O (Whisper STT + TTS)</td><td>Dev team</td><td>Voice-driven assistive features</td></tr>
+    <tr><td>W4</td><td>BIS/WPC applications filed + beta app release</td><td>Compliance + Dev</td><td>Apps submitted, 10 internal testers</td></tr>
+  </table>
+
+  <h3>Month 2: Hardware Prototype</h3>
+  <table>
+    <tr><th>Week</th><th>Action</th><th>Owner</th><th>Output</th></tr>
+    <tr><td>W5</td><td>nRF52840 DK + MEMS mic BLE audio streaming</td><td>HW engineer</td><td>Audio stream to phone app working</td></tr>
+    <tr><td>W6</td><td>PCB design (4-layer, pendant form factor)</td><td>HW engineer</td><td>Gerber files ready for PCBA</td></tr>
+    <tr><td>W7</td><td>VVDN engagement + NRE quote</td><td>Ops / Founder</td><td>Manufacturing partner confirmed</td></tr>
+    <tr><td>W8</td><td>3D-printed enclosure + first 10 prototypes</td><td>HW + Industrial design</td><td>Working prototypes for beta</td></tr>
+  </table>
+
+  <h3>Month 3: Beta + Validation</h3>
+  <table>
+    <tr><th>Week</th><th>Action</th><th>Owner</th><th>Output</th></tr>
+    <tr><td>W9</td><td>Beta deployment to 10 blind users (via NAB)</td><td>Product + NAB</td><td>Real-world usage data collection</td></tr>
+    <tr><td>W10</td><td>Iterate on AI accuracy + UX feedback</td><td>ML + Product</td><td>AI accuracy &gt;90% for common objects</td></tr>
+    <tr><td>W11</td><td>ADIP listing application + NGO outreach</td><td>Ops / Founder</td><td>Application submitted + 3 NGO LOIs</td></tr>
+    <tr><td>W12</td><td>Production PCB order (500 units) + packaging</td><td>Ops / HW</td><td>First production batch in manufacturing</td></tr>
+  </table>
+
+  <div class="callout callout-insight">
+    <div class="callout-title">The "App First" Strategy</div>
+    <p>Month 1 builds a <strong>software-only blind assistive app</strong> using the phone's existing camera and mic. This validates AI accuracy and user experience <strong>before spending a rupee on hardware</strong>. If the app doesn't work well, we iterate on software. If it works, we know the hardware will amplify it.</p>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 4: Execution</span>
+  </div>
+</div>
+
+<!-- PAGE: Budget + Partnerships + Metrics -->
+<div class="page">
+  <h2>4.2 Budget Allocation</h2>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-number">Rs 25&ndash;40L</div>
+      <div class="stat-label">Total Budget (First 1000 Units)</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">Rs 60L</div>
+      <div class="stat-label">Available via Grants</div>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Category</th><th>Amount (Rs)</th><th>% of Total</th><th>Details</th></tr>
+    <tr><td>Hardware prototyping</td><td>5&ndash;8L</td><td>20%</td><td>Dev kits, PCB runs, 3D printing, 10 prototypes</td></tr>
+    <tr><td>Manufacturing (500 units)</td><td>8&ndash;12L</td><td>30%</td><td>PCBA, enclosure, assembly, testing (VVDN)</td></tr>
+    <tr><td>Certification (BIS/WPC/EMC)</td><td>4&ndash;8L</td><td>15%</td><td>Lab testing + filing fees</td></tr>
+    <tr><td>Software development</td><td>3&ndash;5L</td><td>12%</td><td>Android app, AI pipeline, cloud infrastructure</td></tr>
+    <tr><td>Marketing + distribution</td><td>3&ndash;4L</td><td>10%</td><td>Amazon listing, NGO events, demo units</td></tr>
+    <tr><td>Operations + legal</td><td>2&ndash;3L</td><td>8%</td><td>Company registration, IP filing, compliance</td></tr>
+    <tr><td>Contingency</td><td>2&ndash;3L</td><td>5%</td><td>Unforeseen costs, iteration buffer</td></tr>
+    <tr style="font-weight:700;background:#f0fdf4;"><td>Total</td><td>25&ndash;40L</td><td>100%</td><td></td></tr>
+  </table>
+
+  <h2>4.3 Key Partnerships</h2>
+
+  <table>
+    <tr><th>Partner</th><th>Type</th><th>Value to OmniPilot</th><th>Status</th></tr>
+    <tr><td>National Association for the Blind (NAB)</td><td>NGO / Distribution</td><td>Beta users, ADIP channel, credibility</td><td>To approach</td></tr>
+    <tr><td>Saksham Trust</td><td>NGO / Distribution</td><td>Pan-India visually impaired network</td><td>To approach</td></tr>
+    <tr><td>VVDN Technologies</td><td>Manufacturing</td><td>Full PCBA + assembly + testing</td><td>To approach</td></tr>
+    <tr><td>Garuda Aerospace</td><td>Drone B2B</td><td>Voice module integration partner</td><td>To approach</td></tr>
+    <tr><td>IoTechWorld Avigation</td><td>Drone B2B</td><td>Agriculture drone voice control</td><td>To approach</td></tr>
+    <tr><td>IIT Delhi / IISc</td><td>Research</td><td>IndicWhisper, on-device AI, Hindi NLP</td><td>To approach</td></tr>
+  </table>
+
+  <h2>4.4 Success Metrics</h2>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-number">100</div>
+      <div class="stat-label">Blind Users in 6 Months</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">1,000</div>
+      <div class="stat-label">Pendants Sold in Year 1</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">90%+</div>
+      <div class="stat-label">AI Accuracy Target</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">3</div>
+      <div class="stat-label">NGO Partnerships</div>
+    </div>
+  </div>
+
+  <table>
+    <tr><th>Metric</th><th>3 Months</th><th>6 Months</th><th>12 Months</th></tr>
+    <tr><td>Blind assistive users</td><td>10 (beta)</td><td>100 (ADIP pilot)</td><td>3,000 (production)</td></tr>
+    <tr><td>BLE pendants sold</td><td>0</td><td>100 (early adopters)</td><td>1,000</td></tr>
+    <tr><td>Drone B2B licenses</td><td>0</td><td>5 (pilot)</td><td>50&ndash;200</td></tr>
+    <tr><td>Revenue</td><td>Rs 0 (build phase)</td><td>Rs 25L</td><td>Rs 1.5&ndash;4.2 Cr</td></tr>
+    <tr><td>AI accuracy (objects)</td><td>&gt;85%</td><td>&gt;90%</td><td>&gt;95%</td></tr>
+    <tr><td>User satisfaction (NPS)</td><td>Baseline</td><td>&gt;40</td><td>&gt;60</td></tr>
+  </table>
+
+  <div class="callout callout-key">
+    <div class="callout-title">The North Star</div>
+    <p>If a blind person in a tier-2 Indian city can walk to a grocery store, read product labels in Hindi, and pay &mdash; all guided by OmniPilot &mdash; we have won. Everything else is optimization.</p>
+  </div>
+  <div class="page-footer">
+    <span class="confidential">Confidential</span>
+    <span>OmniPilot Hardware | Phase 4: Execution</span>
+  </div>
+</div>
+
+<!-- ========== BACK COVER ========== -->
+<div class="page back-cover">
+  <h2 style="font-size:28pt; margin-bottom:0.5rem;">OmniPilot Hardware</h2>
+  <p style="font-size:14pt; color:#c7d2fe; font-style:italic; margin-bottom:1rem;">AI that sees, hears, and guides.</p>
+  <div style="width:80px;height:3px;background:linear-gradient(90deg,#f59e0b,#ef4444);margin:1rem auto;border-radius:2px;"></div>
+
+  <div style="margin:2rem 0;">
+    <p style="font-size:11pt; color:#e0e7ff; margin-bottom:0.3rem;"><strong>Soumya Swain</strong></p>
+    <p style="font-size:10pt; color:#a5b4fc;">Co-founder | Sidewall</p>
+    <p style="font-size:10pt; color:#a5b4fc;">soumya@sidewall.in</p>
+  </div>
+
+  <div class="qr-box">
+    <img src="data:image/png;base64,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" alt="LinkedIn QR Code" />
+  </div>
+  <p style="font-size:9pt; color:#818cf8; margin-top:0.5rem;">Scan for LinkedIn &mdash; Kishore Rajendra</p>
+
+  <div style="margin-top:3rem; font-size:8pt; color:#6366f1;">
+    <p>Sidewall Technologies Pvt. Ltd.</p>
+    <p>support@devpilot.co.in | devpilot.co.in</p>
+    <p style="margin-top:0.5rem;">Confidential &mdash; April 2026</p>
+  </div>
+</div>
+
+</body>
+</html>
