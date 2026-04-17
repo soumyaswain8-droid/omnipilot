@@ -226,20 +226,32 @@ class Pipeline: @unchecked Sendable {
             confirmation: "Task set for \(timeStr)"
         )
 
-        // Build confirmation message
-        var confirmation = ""
-        switch intent.action {
-        case "whatsapp":
-            confirmation = "Got it! I'll open WhatsApp to send \"\(intent.message ?? intent.description)\" to \(intent.recipient ?? "the contact") at \(timeStr)."
-        case "email":
-            confirmation = "Got it! I'll prepare an email to \(intent.recipient ?? "the recipient") at \(timeStr)."
-        case "call":
-            confirmation = "Got it! I'll remind you to call \(intent.recipient ?? "the contact") at \(timeStr)."
-        default:
-            confirmation = "Got it! I'll remind you: \(intent.description) at \(timeStr)."
+        // Build SHORT confirmation — just task + time
+        let shortTime: String
+        let interval = intent.scheduledAt.timeIntervalSinceNow
+        if interval < 3600 {
+            shortTime = "in \(Int(interval / 60)) minutes"
+        } else if interval < 86400 {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "h:mm a"
+            shortTime = "at \(fmt.string(from: intent.scheduledAt))"
+        } else {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "EEEE h:mm a"
+            shortTime = fmt.string(from: intent.scheduledAt)
         }
 
-        // Speak confirmation
+        let confirmation: String
+        switch intent.action {
+        case "whatsapp":
+            confirmation = "Will message \(intent.recipient ?? "them") \(shortTime)."
+        case "call":
+            confirmation = "Will remind you to call \(intent.recipient ?? "them") \(shortTime)."
+        default:
+            confirmation = "\(intent.description), \(shortTime)."
+        }
+
+        // Speak SHORT confirmation
         VoiceOutput.shared.speak(confirmation)
         onTaskCreated?(confirmation)
 

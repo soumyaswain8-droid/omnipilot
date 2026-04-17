@@ -77,9 +77,9 @@ class VoiceOutput: @unchecked Sendable {
         }
     }
 
-    /// Speak a reminder
+    /// Speak a reminder — short and direct, just the task
     func speakReminder(_ text: String) {
-        speak("Reminder: \(text)", rate: 0.48)
+        speak(text, rate: 0.48)
     }
 
     /// Speak daily summary (slower for comprehension)

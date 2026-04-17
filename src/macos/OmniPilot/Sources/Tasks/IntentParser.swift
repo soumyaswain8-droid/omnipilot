@@ -203,24 +203,40 @@ class IntentParser {
     }
 
     private func buildDescription(from input: String) -> String {
-        // Clean up the input to make a short description
         var desc = input
-        // Remove time references
+
+        // Remove ALL filler — keep ONLY the core task
         let removePatterns = [
-            #"(tomorrow|today|tonight|next week|in \d+ (minutes?|hours?))"#,
-            #"at \d{1,2}\s*(pm|am|PM|AM)?"#,
-            #"(morning|afternoon|evening|night)"#,
-            #"(remind me to|remember to|don't forget to|set a reminder to)"#,
+            // Time references
+            #"(tomorrow|today|tonight|next week)"#,
+            #"(in|after) \d+ (minutes?|hours?|mins?|hrs?)"#,
+            #"at \d{1,2}[\.:]\d{0,2}\s*(pm|am|PM|AM)?"#,
+            #"at \d{1,2}\s*(pm|am|PM|AM)"#,
+            #"(this )?(morning|afternoon|evening|night)"#,
+            #"\d+ minutes? (from now|later)"#,
+            // Command prefixes
+            #"^(please |can you |could you )?"#,
+            #"(remind me to|remind me|remember to|don't forget to|dont forget to)"#,
+            #"(set a reminder to|set reminder to|set a reminder for)"#,
             #"(send (a )?whatsapp to|send (a )?message to|send (an )?email to)"#,
+            #"(call |phone |ring )"#,
+            // Filler
+            #"(after|before|later|from now)"#,
+            #"\.$"#,
         ]
         for pattern in removePatterns {
-            desc = desc.replacingOccurrences(of: pattern, with: "", options: .regularExpression)
+            desc = desc.replacingOccurrences(of: pattern, with: " ", options: [.regularExpression, .caseInsensitive])
         }
-        desc = desc.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Clean up extra spaces
+        desc = desc.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+        desc = desc.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+
         // Capitalize first letter
         if let first = desc.first {
             desc = first.uppercased() + desc.dropFirst()
         }
+
         return desc.isEmpty ? input : desc
     }
 
