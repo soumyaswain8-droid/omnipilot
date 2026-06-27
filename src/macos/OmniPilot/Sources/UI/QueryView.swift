@@ -855,12 +855,12 @@ struct SettingsTab: View {
                 }
 
                 SettingsGroup(title: "About") {
-                    InfoLine(label: "LLM", value: "llama3.2:3b (local)")
+                    InfoLine(label: "LLM", value: "qwen3:8b (local)")
                     InfoLine(label: "STT", value: "whisper.cpp (small.en)")
                     InfoLine(label: "Memories", value: "\(pipeline.memory.count())")
                     InfoLine(label: "Hotkey", value: "Cmd+Shift+O")
                     InfoLine(label: "Privacy", value: "100% on-device")
-                    InfoLine(label: "Version", value: "0.2.0")
+                    InfoLine(label: "Version", value: "0.3.0")
                 }
 
                 SettingsGroup(title: "Data") {

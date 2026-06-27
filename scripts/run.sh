@@ -17,15 +17,50 @@ else
 fi
 
 # 2. Whisper server (persistent — loads model once)
-if ! curl -s http://localhost:18386/ &>/dev/null; then
-    echo "[2/5] Starting Whisper server (base.en)..."
-    whisper-server \
-        --model "$PROJECT/models/ggml-base.en.bin" \
-        --host 127.0.0.1 --port 18386 --threads 4 \
-        &>/dev/null &
-    sleep 2
+#
+# Performance note: on Apple Silicon the FAST path is a NATIVE arm64 whisper.cpp with Metal
+# (transcribes a few seconds of audio in <1s). If whisper-server is an x86_64 binary running
+# under Rosetta (no Metal), transcription is ~10-16x slower. We warn about that below.
+#
+# Model choice trades accuracy vs latency. Override with: WHISPER_MODEL=/path/to/ggml-*.bin
+#   tiny.en  (39MB)  fastest, lowest accuracy
+#   base.en  (141MB) DEFAULT — best speed/accuracy balance, esp. important under Rosetta
+#   small.en (465MB) more accurate, ~3x slower than base
+#   medium.en(1.5GB) most accurate, slow (parked as .park by default)
+pick_whisper_model() {
+    if [ -n "$WHISPER_MODEL" ] && [ -f "$WHISPER_MODEL" ]; then echo "$WHISPER_MODEL"; return; fi
+    for m in base.en small.en medium.en tiny.en; do
+        [ -f "$PROJECT/models/ggml-$m.bin" ] && { echo "$PROJECT/models/ggml-$m.bin"; return; }
+    done
+}
+
+start_whisper() {
+    local model; model="$(pick_whisper_model)"
+    if [ -z "$model" ]; then echo "[2/5] Whisper: no model found in $PROJECT/models/"; return; fi
+    # Warn if running emulated x86_64 on Apple Silicon (the usual cause of slow transcription).
+    if sysctl -n machdep.cpu.brand_string 2>/dev/null | grep -q "Apple" \
+       && file "$(command -v whisper-server)" 2>/dev/null | grep -q "x86_64"; then
+        echo "    WARNING: whisper-server is x86_64 (Rosetta) on Apple Silicon — transcription will be slow."
+        echo "             For a ~10x speedup install native arm64 whisper.cpp (Metal). See docs/whisper-speed.md"
+    fi
+    echo "[2/5] Starting Whisper server ($(basename "$model"))..."
+    whisper-server --model "$model" --host 127.0.0.1 --port 18386 --threads 4 \
+        --language en --no-timestamps &>/dev/null &
+    # Wait for model load (up to ~30s) instead of a blind sleep.
+    for _ in $(seq 1 30); do curl -s -o /dev/null --max-time 2 http://localhost:18386/ && break; sleep 1; done
+}
+
+# Recycle guard: treat the server as healthy only if it answers a health ping within 3s.
+# A server that holds the port but can't respond promptly is overloaded/hung (the "17-day stale,
+# pegged at 380% CPU" case) — kill and restart it fresh rather than leaving it degraded.
+if curl -s -o /dev/null --max-time 3 http://localhost:18386/ 2>/dev/null; then
+    echo "[2/5] Whisper server: running (responsive)"
+elif lsof -i :18386 &>/dev/null; then
+    echo "[2/5] Whisper server: up but UNRESPONSIVE — recycling..."
+    pkill -9 -f whisper-server 2>/dev/null; sleep 1
+    start_whisper
 else
-    echo "[2/5] Whisper server: running"
+    start_whisper
 fi
 
 # 3. Silero VAD service

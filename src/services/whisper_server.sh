@@ -3,7 +3,7 @@
 # Loads the model ONCE and serves via HTTP on port 18386
 # This is 10-50x faster than calling whisper-cli per chunk
 
-MODEL="${1:-$(dirname "$0")/../../models/ggml-base.en.bin}"
+MODEL="${1:-$(dirname "$0")/../../models/ggml-small.en.bin}"
 PORT=18386
 HOST=127.0.0.1
 

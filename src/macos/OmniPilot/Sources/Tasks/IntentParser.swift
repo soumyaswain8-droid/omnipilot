@@ -19,13 +19,40 @@ class IntentParser {
 
     /// Parse a natural language command into a TaskIntent
     func parse(_ input: String) async throws -> TaskIntent? {
+        // Normalize written-out numbers ("two" -> "2") so regex-based parsers work
+        let normalized = Self.normalizeNumbers(input)
+
         // First try fast local parsing (no LLM needed for simple patterns)
-        if let quickResult = quickParse(input) {
+        if let quickResult = quickParse(normalized) {
             return quickResult
         }
 
         // Fall back to LLM for complex requests
-        return try await llmParse(input)
+        return try await llmParse(normalized)
+    }
+
+    /// Convert spoken number words to digits so downstream regexes work.
+    /// "remind me in two minutes" -> "remind me in 2 minutes"
+    static func normalizeNumbers(_ input: String) -> String {
+        let map: [(String, String)] = [
+            ("a couple of", "2"), ("a couple", "2"), ("couple of", "2"),
+            ("half an", "30"), ("a few", "5"),
+            ("eleven", "11"), ("twelve", "12"), ("thirteen", "13"),
+            ("fourteen", "14"), ("fifteen", "15"), ("twenty", "20"),
+            ("thirty", "30"), ("forty", "40"), ("fifty", "50"), ("sixty", "60"),
+            ("one", "1"), ("two", "2"), ("three", "3"), ("four", "4"),
+            ("five", "5"), ("six", "6"), ("seven", "7"), ("eight", "8"),
+            ("nine", "9"), ("ten", "10"),
+        ]
+        var result = input
+        for (word, num) in map {
+            result = result.replacingOccurrences(
+                of: "\\b\(word)\\b",
+                with: num,
+                options: [.regularExpression, .caseInsensitive]
+            )
+        }
+        return result
     }
 
     // MARK: - Fast Local Parsing (no LLM, instant)
@@ -249,22 +276,41 @@ class IntentParser {
         return nil
     }
 
-    /// Quick check if input looks like a task/reminder command
+    /// Quick check if input looks like a task/reminder command.
+    /// Runs against a number-normalized copy of the text so "in two minutes"
+    /// is recognised the same as "in 2 minutes".
     static func looksLikeTask(_ input: String) -> Bool {
-        let lower = input.lowercased()
-        let keywords = [
-            "remind me", "remember to", "don't forget", "dont forget",
-            "send whatsapp", "send a whatsapp", "whatsapp message",
-            "send email", "send an email", "email to",
-            "call me", "schedule",
-            "in 30 min", "in an hour", "in 1 hour",
-            "after 5 min", "after 10 min", "after 30 min",
-            "after 1 hour", "after 2 hour",
-            "set a reminder", "set reminder",
-            "tomorrow at", "today at", "at 4 pm", "at 5 pm",
-            "at 6 pm", "at 7 pm", "at 8 pm", "at 9 pm",
-            "at 10 am", "at 11 am", "this evening", "tonight",
+        let lower = normalizeNumbers(input).lowercased()
+
+        // Strong intent verbs — trigger task path even if "me" was dropped by Whisper
+        let verbPatterns = [
+            #"\bremind\b"#,             // "remind me to", "remind to", "remind Kishore"
+            #"\bremember to\b"#,
+            #"\bdon'?t forget\b"#,
+            #"\bset (a )?reminder\b"#,
+            #"\bschedule\b"#,
+            #"\bsend (a |an )?(whatsapp|message|email|mail)\b"#,
+            #"\bcall (me|him|her|them|[A-Za-z])"#,
         ]
-        return keywords.contains(where: { lower.contains($0) })
+        for pattern in verbPatterns {
+            if lower.range(of: pattern, options: .regularExpression) != nil {
+                return true
+            }
+        }
+
+        // Time clues — any relative or absolute time phrase is a strong task signal
+        let timePatterns = [
+            #"\b(in|after) \d+ (min|mins|minute|minutes|hour|hours|hr|hrs)\b"#,
+            #"\b\d+ (minute|minutes|hour|hours) (from now|later)\b"#,
+            #"\b(tomorrow|today|tonight|this (morning|afternoon|evening|night))\b"#,
+            #"\bat \d{1,2}(:\d{2})?\s*(am|pm)\b"#,
+        ]
+        for pattern in timePatterns {
+            if lower.range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil {
+                return true
+            }
+        }
+
+        return false
     }
 }

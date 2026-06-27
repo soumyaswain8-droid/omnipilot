@@ -3,8 +3,38 @@ import Foundation
 /// Client for Ollama REST API (localhost:11434)
 class OllamaClient: @unchecked Sendable {
     private let baseURL = "http://localhost:11434"
-    private let model = "llama3.2:3b"
+    /// Preferred model first. Runtime picks the first one that Ollama has loaded.
+    private let preferredModels = ["qwen3:8b", "llama3.2:3b"]
+    private var model: String = "qwen3:8b"
     private let session = URLSession.shared
+
+    init() {
+        selectBestAvailableModel()
+    }
+
+    /// Query Ollama's model list once at startup and pick the highest-preference match.
+    /// Runs synchronously (short request) so the chosen model is ready before any generate() call.
+    private func selectBestAvailableModel() {
+        guard let url = URL(string: "\(baseURL)/api/tags") else { return }
+        let semaphore = DispatchSemaphore(value: 0)
+        var names: [String] = []
+        URLSession.shared.dataTask(with: url) { data, _, _ in
+            if let data = data,
+               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let models = obj["models"] as? [[String: Any]] {
+                names = models.compactMap { $0["name"] as? String }
+            }
+            semaphore.signal()
+        }.resume()
+        _ = semaphore.wait(timeout: .now() + 2)
+
+        for candidate in preferredModels where names.contains(candidate) {
+            model = candidate
+            print("[Ollama] Using model: \(candidate)")
+            return
+        }
+        print("[Ollama] No preferred model loaded — defaulting to \(model)")
+    }
 
     /// Generate a response from the LLM
     /// Handles Qwen3's thinking mode: extracts from both 'response' and 'thinking' fields

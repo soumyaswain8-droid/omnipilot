@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import ApplicationServices
 
 @main
 struct OmniPilotApp: App {
@@ -74,18 +75,43 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         self.popover = popover
 
-        // Register global hotkey (Cmd+Shift+O)
-        NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        // Global hotkey (Cmd+Shift+O) needs Accessibility trust, or the global monitor
+        // silently never fires. Prompt for it once so the shortcut actually works.
+        requestAccessibilityIfNeeded()
+
+        let hotkeyHandler: (NSEvent) -> Void = { [weak self] event in
             if event.modifierFlags.contains([.command, .shift]) && event.keyCode == 31 {
-                Task { @MainActor in
-                    self?.showPopover()
-                }
+                Task { @MainActor in self?.showPopover() }
             }
+        }
+        // Global monitor: fires when another app is frontmost (needs Accessibility).
+        NSEvent.addGlobalMonitorForEvents(matching: .keyDown, handler: hotkeyHandler)
+        // Local monitor: fallback so the shortcut still works while OmniPilot is active,
+        // even before Accessibility is granted.
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            hotkeyHandler(event)
+            return event
         }
 
         // Auto-start listening
         pipeline?.start()
+
+        // Schedule end-of-day summary at 6 PM (reschedules itself for next day after firing)
+        pipeline?.scheduleDailySummary(hour: 18)
+
         print("[OmniPilot] Ready. Left-click = popover, Right-click = menu, Cmd+Shift+O = query.")
+        print("[OmniPilot] Say 'Hey Pilot, <your question>' to query hands-free.")
+    }
+
+    /// Prompt for Accessibility trust if not already granted. Without it, the global hotkey
+    /// monitor is installed but never fires — the classic "Cmd+Shift+O does nothing" symptom.
+    private func requestAccessibilityIfNeeded() {
+        // Use the literal key string ("AXTrustedCheckOptionPrompt") rather than the SDK constant,
+        // whose Swift type (CFString vs Unmanaged<CFString>) varies across SDK versions.
+        let trusted = AXIsProcessTrustedWithOptions(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
+        if !trusted {
+            print("[OmniPilot] Accessibility not yet granted — global hotkey will work after you enable OmniPilot in System Settings > Privacy & Security > Accessibility.")
+        }
     }
 
     @objc func statusBarClicked() {

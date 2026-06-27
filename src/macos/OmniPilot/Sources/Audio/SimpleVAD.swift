@@ -8,10 +8,11 @@ class SimpleVAD: @unchecked Sendable {
     /// Speech threshold (used for energy fallback)
     var speechThreshold: Float = 0.01
 
-    /// Minimum consecutive speech frames to trigger
-    var minSpeechFrames: Int = 3
-    /// Minimum consecutive silence frames to stop
-    var minSilenceFrames: Int = 15
+    /// Minimum consecutive speech frames to trigger (2 frames = 60ms — quick to start)
+    var minSpeechFrames: Int = 2
+    /// Minimum consecutive silence frames to stop (25 frames = 750ms — holds through natural pauses)
+    /// Natural speech has 300-500ms pauses between phrases for breath/thought. Must wait longer than that.
+    var minSilenceFrames: Int = 25
 
     private var consecutiveSpeechFrames = 0
     private var consecutiveSilenceFrames = 0
@@ -114,10 +115,11 @@ class SimpleVAD: @unchecked Sendable {
             }
         })
 
-        // Wait up to 10ms — if Silero is too slow, return false (don't block audio)
-        let timeout = semaphore.wait(timeout: .now() + .milliseconds(10))
+        // Wait up to 5ms — Silero inference is typically 2ms. Anything slower means IPC lag,
+        // fall through to energy detection so the audio thread never stalls.
+        let timeout = semaphore.wait(timeout: .now() + .milliseconds(5))
         if timeout == .timedOut {
-            return false
+            return processEnergy(samples: samples)
         }
 
         return result

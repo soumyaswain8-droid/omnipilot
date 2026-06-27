@@ -14,6 +14,13 @@ settings:
     PRODUCT_BUNDLE_IDENTIFIER: in.sidewall.omnipilot
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
+    # Stable code-signing so macOS doesn't re-prompt for mic permission on every rebuild.
+    # Identifies the cert by its SHA-1 hash (most reliable) instead of the display name.
+    # Team ID is the OU field of the cert (7AAU4FX8HA), not the certificate ID (7W5CSVP6ZJ).
+    DEVELOPMENT_TEAM: "7AAU4FX8HA"
+    CODE_SIGN_STYLE: "Manual"
+    CODE_SIGN_IDENTITY: "F9C44FD6AF0113F9B9AA8E7144B009FDFAE48009"
+    PROVISIONING_PROFILE_SPECIFIER: ""
 
 targets:
   OmniPilot:

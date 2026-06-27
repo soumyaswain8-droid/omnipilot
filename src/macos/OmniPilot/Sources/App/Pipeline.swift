@@ -1,8 +1,12 @@
 import Foundation
 import SQLite
+import os.log
 
 /// The main OmniPilot pipeline: Audio -> VAD -> Whisper -> Memory -> LLM
 class Pipeline: @unchecked Sendable {
+    /// Unified-logging handle — visible via `log stream --predicate 'subsystem == "in.sidewall.omnipilot"'`
+    private static let log = Logger(subsystem: "in.sidewall.omnipilot", category: "Pipeline")
+
     let audioCapture: AudioCapture
     let whisper: WhisperBridge
     let memory: MemoryStore
@@ -100,6 +104,20 @@ class Pipeline: @unchecked Sendable {
             return
         }
 
+        // Audio energy gate — if the whole buffer is quiet, it's ambient noise, not speech.
+        // Threshold calibrated to allow quiet/close-mic speech through while still blocking
+        // fan hum and keyboard clicks (which tend to sit below ~0.003 RMS).
+        let rms = Self.calculateRMS(audio)
+        Self.log.info("Audio RMS: \(rms, format: .fixed(precision: 5)), samples: \(audio.count)")
+        // Lowered from 0.005 -> 0.0015: 0.005 silently dropped normal-volume speech from the
+        // built-in mic (especially at arm's length), so only loud ambient audio got through.
+        // 0.0015 still blocks fan hum / keyboard clicks which sit well below it.
+        guard rms > 0.0015 else {
+            Self.log.info("Skipping — audio too quiet (RMS \(rms, format: .fixed(precision: 5)))")
+            onStatusUpdate?("Listening...")
+            return
+        }
+
         Task {
             do {
                 let text = try await whisper.transcribe(audioSamples: audio)
@@ -107,23 +125,41 @@ class Pipeline: @unchecked Sendable {
                 // Skip empty or very short transcriptions
                 let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard cleaned.count > 5 else {
+                    Self.log.info("Skipping — transcript too short (\(cleaned.count) chars): '\(cleaned, privacy: .public)'")
                     onStatusUpdate?("Listening...")
                     return
                 }
 
-                // Skip common noise transcriptions
-                let noisePatterns = ["[BLANK_AUDIO]", "(music)", "[Music]", "(silence)", "Thank you."]
-                if noisePatterns.contains(where: { cleaned.contains($0) }) && cleaned.count < 20 {
+                // Skip Whisper hallucinations (parenthetical/bracket annotations and common fillers)
+                if Self.isHallucination(cleaned) {
+                    Self.log.info("Skipping — hallucination: \(cleaned.prefix(60), privacy: .public)")
                     onStatusUpdate?("Listening...")
                     return
                 }
 
-                print("[Pipeline] Transcribed: \(cleaned.prefix(80))...")
+                Self.log.info("Transcribed: \(cleaned.prefix(80), privacy: .public)")
                 onTranscription?(cleaned)
+
+                // Wake-phrase detection — "Hey Pilot, <question>" routes to hands-free query
+                if let query = Self.stripWakePhrase(cleaned) {
+                    print("[Pipeline] Wake phrase detected. Query: \(query)")
+                    self.onStatusUpdate?("Thinking...")
+                    do {
+                        let answer = try await self.query(query, speakAnswer: true)
+                        self.onTranscription?("> \(query)\n\n\(answer)")
+                    } catch {
+                        print("[Pipeline] Wake query failed: \(error)")
+                        VoiceOutput.shared.speak("Sorry, I couldn't answer that.")
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) { [weak self] in
+                        self?.onStatusUpdate?("Listening...")
+                    }
+                    return
+                }
 
                 // Check if this is a voice COMMAND (task/reminder) before storing as memory
                 if IntentParser.looksLikeTask(cleaned) {
-                    print("[Pipeline] Detected voice command: \(cleaned)")
+                    Self.log.info("Detected voice command: \(cleaned, privacy: .public)")
                     do {
                         let confirmation = try await self.createTask(from: cleaned)
                         self.onTranscription?("✓ \(confirmation)")
@@ -136,6 +172,7 @@ class Pipeline: @unchecked Sendable {
                 } else {
                     // Regular speech — store as memory
                     memory.storeWithEmbedding(text: cleaned, source: "mic", type: "transcription")
+                    Self.log.info("Stored memory — \(self.memory.count()) total")
                     onStatusUpdate?("Stored. \(memory.count()) memories total.")
                 }
 
@@ -145,7 +182,7 @@ class Pipeline: @unchecked Sendable {
                 }
 
             } catch {
-                print("[Pipeline] Transcription error: \(error)")
+                Self.log.error("Transcription error: \(error.localizedDescription, privacy: .public)")
                 onStatusUpdate?("Listening...")
             }
         }
@@ -157,7 +194,9 @@ class Pipeline: @unchecked Sendable {
         isRunning = true
         audioCapture.startCapture()
         onStatusUpdate?("Listening...")
-        print("[Pipeline] Started — listening for speech")
+        Self.log.info("Started — listening for speech")
+        // Safety net: re-embed any memories whose embedding failed at store time.
+        memory.backfillMissingEmbeddings()
     }
 
     /// Stop the pipeline
@@ -327,5 +366,56 @@ class Pipeline: @unchecked Sendable {
 
     private func showNotification(title: String, body: String) {
         NotificationHelper.shared.send(title: title, body: body)
+    }
+
+    /// Root-mean-square amplitude of a Float PCM buffer. Used to gate low-energy audio.
+    static func calculateRMS(_ samples: [Float]) -> Float {
+        guard !samples.isEmpty else { return 0 }
+        var sum: Float = 0
+        for s in samples { sum += s * s }
+        return (sum / Float(samples.count)).squareRoot()
+    }
+
+    /// Detect common Whisper hallucinations on silent/noisy audio.
+    /// Whisper tends to output bracketed annotations or stock phrases when fed near-silence.
+    static func isHallucination(_ text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lower = trimmed.lowercased()
+
+        // Anything that's entirely a parenthetical/bracket annotation is metadata, not speech.
+        // E.g. "(speaking foreign language)", "[music]", "(footsteps)"
+        if trimmed.first == "(" && trimmed.last == ")" { return true }
+        if trimmed.first == "[" && trimmed.last == "]" { return true }
+        if trimmed.hasPrefix("- ") && trimmed.count < 30 { return true }
+
+        // Known stock-phrase hallucinations — Whisper produces these when fed silence
+        let stockHallucinations = [
+            "thank you.", "thank you!", "thanks for watching",
+            "bonjour!", "bonjour.", "subscribe to",
+            "see you next time", "see you in the next",
+            "please subscribe", "like and subscribe",
+            "www.", "http", ".com", ".org",
+        ]
+        for phrase in stockHallucinations where lower.contains(phrase) && trimmed.count < 40 {
+            return true
+        }
+
+        return false
+    }
+
+    /// Strip a wake phrase from the start of a transcription. Returns the remaining query,
+    /// or nil if no wake phrase is present.
+    /// Accepts: "hey pilot", "hey omni", "hey omnipilot", "ok pilot", "okay pilot"
+    static func stripWakePhrase(_ text: String) -> String? {
+        let lower = text.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let phrases = ["hey pilot", "hey omnipilot", "hey omni", "okay pilot", "ok pilot"]
+        for phrase in phrases where lower.hasPrefix(phrase) {
+            // Find the original-case cut point, skip phrase + any trailing comma/space
+            let rest = text.dropFirst(phrase.count)
+            let trimmed = rest.drop(while: { " ,.:".contains($0) })
+            let query = String(trimmed).trimmingCharacters(in: .whitespacesAndNewlines)
+            return query.isEmpty ? nil : query
+        }
+        return nil
     }
 }

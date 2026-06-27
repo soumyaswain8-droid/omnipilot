@@ -16,11 +16,19 @@ class WhisperBridge: @unchecked Sendable {
         let altPath = "/opt/homebrew/bin/whisper-cli"
         whisperCliPath = FileManager.default.fileExists(atPath: brewPath) ? brewPath : altPath
 
-        // Model path for CLI fallback
+        // Model path for CLI fallback — prefer medium (best accuracy) → small → base.
         let projectModels = NSHomeDirectory() + "/Documents/tinker/projects/omnipilot/models"
         let basePath = projectModels + "/ggml-base.en.bin"
         let smallPath = projectModels + "/ggml-small.en.bin"
-        modelPath = FileManager.default.fileExists(atPath: basePath) ? basePath : smallPath
+        let mediumPath = projectModels + "/ggml-medium.en.bin"
+        let fm = FileManager.default
+        if fm.fileExists(atPath: mediumPath) {
+            modelPath = mediumPath
+        } else if fm.fileExists(atPath: smallPath) {
+            modelPath = smallPath
+        } else {
+            modelPath = basePath
+        }
 
         // Temp directory
         tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("omnipilot")
@@ -83,6 +91,20 @@ class WhisperBridge: @unchecked Sendable {
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"response_format\"\r\n\r\n".data(using: .utf8)!)
         body.append("text\r\n".data(using: .utf8)!)
+
+        // Initial prompt — primes Whisper's vocabulary for Indian names, Sidewall products, and
+        // banks/apps commonly mentioned in Soumya's conversations. Reduces mis-transcription
+        // (e.g. "Rajan" not "Razan", "HDFC" not "HDF", "ICICI" not "ICB").
+        let initialPrompt = "Conversation with Indian names including Kishore, Rajan, Harshini, Soumya, Swain. Banks: HDFC, ICICI, Kotak, Axis, SBI. Apps: WhatsApp, DevPilot, OmniPilot, BizBot, AdPilot, TradePilot. Mixed English and occasional Hindi words."
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"prompt\"\r\n\r\n".data(using: .utf8)!)
+        body.append(initialPrompt.data(using: .utf8)!)
+        body.append("\r\n".data(using: .utf8)!)
+
+        // Temperature 0 — deterministic decoding, fewer hallucinations on ambiguous audio
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"temperature\"\r\n\r\n".data(using: .utf8)!)
+        body.append("0\r\n".data(using: .utf8)!)
 
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
 
