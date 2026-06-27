@@ -1,10 +1,45 @@
 # Whisper Transcription Speed (Apple Silicon)
 
-## TL;DR
-On this machine (Apple M1), `whisper-server` is an **x86_64 binary running under Rosetta 2
-with no Metal GPU acceleration**. That makes transcription ~10–16x slower than it should be
-(~16s for a 4s clip on `small.en`, vs <1s native). The app is otherwise fully functional —
-this is purely latency.
+## STATUS: RESOLVED (2026-06-27)
+Built a native arm64 + Metal `whisper-server` into `vendor/whisper.cpp/`. `run.sh` now prefers
+it automatically. Measured result on the same 4s clip:
+
+| Build | Model | Latency |
+|-------|-------|---------|
+| x86_64 Rosetta, CPU-only (old) | small.en | ~16s |
+| **native arm64 + Metal (now)** | **small.en** | **~1.1s** (≈14x faster) |
+
+`vendor/` is gitignored (build artifacts). To rebuild on another machine, follow
+"Fix option 3" below — the key flag is **`-DGGML_NATIVE=OFF`** (see Gotcha).
+
+### Exact commands that worked
+```bash
+cd vendor   # under the omnipilot project
+# 1. native arm64 cmake (no Homebrew) — Kitware universal tarball includes arm64
+curl -sL https://github.com/Kitware/CMake/releases/download/v4.3.3/cmake-4.3.3-macos-universal.tar.gz | tar xz
+CMAKE="$PWD/cmake-4.3.3-macos-universal/CMake.app/Contents/bin/cmake"
+# 2. build whisper.cpp arm64 + Metal
+git clone --depth 1 https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+"$CMAKE" -B build -DCMAKE_OSX_ARCHITECTURES=arm64 -DGGML_METAL=ON \
+         -DGGML_NATIVE=OFF -DWHISPER_BUILD_SERVER=ON -DCMAKE_BUILD_TYPE=Release
+"$CMAKE" --build build -j --config Release --target whisper-server
+# -> vendor/whisper.cpp/build/bin/whisper-server  (Mach-O arm64, Metal embedded)
+```
+
+### Gotcha
+Because the shell runs under Rosetta, ggml's CMake detects an x86 host and adds `-mcpu=native`,
+which clang rejects when targeting arm64 (`unsupported argument 'native' to option '-mcpu='`).
+Setting `-DGGML_NATIVE=OFF` disables that host-CPU auto-tuning; the arm64 baseline + Metal GPU
+is what delivers the speed anyway.
+
+---
+
+## Original diagnosis (kept for reference)
+
+On this machine (Apple M1), the Homebrew `whisper-server` is an **x86_64 binary running under
+Rosetta 2 with no Metal GPU acceleration** — ~10–16x slower than native. The app was otherwise
+fully functional; this was purely latency.
 
 ## Diagnosis (2026-06-27)
 ```

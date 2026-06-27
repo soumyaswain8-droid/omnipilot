@@ -27,9 +27,18 @@ fi
 #   base.en  (141MB) DEFAULT — best speed/accuracy balance, esp. important under Rosetta
 #   small.en (465MB) more accurate, ~3x slower than base
 #   medium.en(1.5GB) most accurate, slow (parked as .park by default)
+# Prefer the native arm64 + Metal build (vendor/whisper.cpp) — ~14x faster than the Rosetta
+# x86_64 Homebrew binary on Apple Silicon (small.en: ~1s vs ~16s). Falls back to PATH whisper-server.
+NATIVE_WHISPER="$PROJECT/vendor/whisper.cpp/build/bin/whisper-server"
+if [ -x "$NATIVE_WHISPER" ]; then WHISPER_BIN="$NATIVE_WHISPER"; else WHISPER_BIN="$(command -v whisper-server)"; fi
+
 pick_whisper_model() {
     if [ -n "$WHISPER_MODEL" ] && [ -f "$WHISPER_MODEL" ]; then echo "$WHISPER_MODEL"; return; fi
-    for m in base.en small.en medium.en tiny.en; do
+    # With the native+Metal build, small.en (~1s) is the accuracy/speed sweet spot. Without it
+    # (Rosetta), prefer base.en for speed. Order the preference accordingly.
+    local order
+    if [ -x "$NATIVE_WHISPER" ]; then order="small.en base.en medium.en tiny.en"; else order="base.en small.en tiny.en"; fi
+    for m in $order; do
         [ -f "$PROJECT/models/ggml-$m.bin" ] && { echo "$PROJECT/models/ggml-$m.bin"; return; }
     done
 }
@@ -37,17 +46,17 @@ pick_whisper_model() {
 start_whisper() {
     local model; model="$(pick_whisper_model)"
     if [ -z "$model" ]; then echo "[2/5] Whisper: no model found in $PROJECT/models/"; return; fi
-    # Warn if running emulated x86_64 on Apple Silicon (the usual cause of slow transcription).
-    if sysctl -n machdep.cpu.brand_string 2>/dev/null | grep -q "Apple" \
-       && file "$(command -v whisper-server)" 2>/dev/null | grep -q "x86_64"; then
+    # Warn only if we're stuck on the slow Rosetta path (no native build present).
+    if [ ! -x "$NATIVE_WHISPER" ] && sysctl -n machdep.cpu.brand_string 2>/dev/null | grep -q "Apple" \
+       && file "$WHISPER_BIN" 2>/dev/null | grep -q "x86_64"; then
         echo "    WARNING: whisper-server is x86_64 (Rosetta) on Apple Silicon — transcription will be slow."
-        echo "             For a ~10x speedup install native arm64 whisper.cpp (Metal). See docs/whisper-speed.md"
+        echo "             Build the native arm64+Metal version for ~14x speedup. See docs/whisper-speed.md"
     fi
-    echo "[2/5] Starting Whisper server ($(basename "$model"))..."
-    whisper-server --model "$model" --host 127.0.0.1 --port 18386 --threads 4 \
+    echo "[2/5] Starting Whisper server ($(basename "$model"), $([ -x "$NATIVE_WHISPER" ] && echo 'native arm64+Metal' || echo 'system'))..."
+    "$WHISPER_BIN" --model "$model" --host 127.0.0.1 --port 18386 --threads 4 \
         --language en --no-timestamps &>/dev/null &
-    # Wait for model load (up to ~30s) instead of a blind sleep.
-    for _ in $(seq 1 30); do curl -s -o /dev/null --max-time 2 http://localhost:18386/ && break; sleep 1; done
+    # Native build JIT-compiles Metal shaders on first run (~20s), so allow up to 40s.
+    for _ in $(seq 1 40); do curl -s -o /dev/null --max-time 2 http://localhost:18386/ && break; sleep 1; done
 }
 
 # Recycle guard: treat the server as healthy only if it answers a health ping within 3s.

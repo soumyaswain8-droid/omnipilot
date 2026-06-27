@@ -24,3 +24,6 @@ __pycache__/
 # Temp
 *.wav
 *.tmp
+
+# Native whisper.cpp build + local cmake (rebuild via docs/whisper-speed.md)
+vendor/
