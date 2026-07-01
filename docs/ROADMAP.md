@@ -40,6 +40,18 @@ Outcome: a clean, trustworthy memory stream.
 
 _Depends on Phase 1: real side-effects demand reliable intent classification first._
 
+## Pillar M — Meetings *(new; notetaker + scheduling)*
+Turn OmniPilot into a meeting notetaker + scheduler. Shares DNA with Phase 1 (capture/diarization)
+and Phase 3 (calendar/actions). Full research + citations: `docs/research/2026-07-01-meeting-notetaker.md`.
+- **M1 — Local meeting capture + summary**: macOS Core Audio process tap (14.4+) mixing meeting-app
+  audio + mic → existing whisper → Ollama dual-output summary (highlights + minutes) + action items.
+- **M2 — Calendar glue**: Google Calendar (`events.readonly` to auto-detect meetings & join links and
+  arm capture; `events` to schedule) + Apple EventKit (full access to read). Voice "schedule…" → event.
+- **M3 — Bot path**: Recall.ai ($0.50/recording-hr) for unattended/remote meetings → pull audio to
+  local whisper (skip their transcription).
+- **Depends on:** Phase 1 capture foundation + Increment 2 speaker enrollment (diarization is shared);
+  Phase 3 calendar/actions. Natural slot: after Phase 1 Signal Quality.
+
 ## Phase 4 — Mobile Reach *(biggest scope, last)*
 - Flutter app + on-device whisper.
 - LAN sync of `memory.sqlite` (local-first, no cloud).
