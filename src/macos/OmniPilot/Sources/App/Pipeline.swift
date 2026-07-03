@@ -20,8 +20,17 @@ class Pipeline: @unchecked Sendable {
     private var speechBuffer: [Float] = []
     private let speechBufferLock = NSLock()
 
-    /// VAD frame size (30ms at 16kHz)
-    private let vadFrameSize = 480
+    /// Silero requires exactly 512-sample frames (32ms at 16kHz). Feeding any other size — or
+    /// zero-padding a short frame — corrupts its stateful inference.
+    private let vadFrameSize = 512
+
+    /// Leftover (<512) samples carried to the next chunk so VAD frames stay contiguous across the
+    /// 1-second chunk boundary (16000 = 31×512 + 128 remainder).
+    private var vadCarry: [Float] = []
+
+    /// VAD + segmentation runs here, OFF the real-time audio callback thread, so Silero IPC latency
+    /// can never glitch capture.
+    private let vadQueue = DispatchQueue(label: "in.sidewall.omnipilot.vad")
 
     /// Minimum speech duration to transcribe (1 second)
     private let minSpeechSamples = 16000
@@ -60,17 +69,23 @@ class Pipeline: @unchecked Sendable {
     }
 
     private func setupAudioPipeline() {
-        // Audio capture sends chunks (3s). We process through VAD frame by frame.
+        // Audio capture sends 1-second chunks from the real-time tap thread. Hop to the VAD queue
+        // immediately so per-frame Silero round-trips never block audio capture.
         audioCapture.onAudioChunk = { [weak self] chunk in
-            self?.processAudioChunk(chunk)
+            self?.vadQueue.async { self?.processAudioChunk(chunk) }
         }
     }
 
-    /// Process a 3-second audio chunk through VAD
+    /// Process a 1-second audio chunk through VAD in exact 512-sample frames, carrying the sub-frame
+    /// remainder across chunk boundaries so Silero always sees contiguous frames. Runs on `vadQueue`.
     private func processAudioChunk(_ chunk: [Float]) {
+        // Prepend any leftover samples from the previous chunk.
+        var samples = vadCarry
+        samples.append(contentsOf: chunk)
+
         var offset = 0
-        while offset + vadFrameSize <= chunk.count {
-            let frame = Array(chunk[offset..<(offset + vadFrameSize)])
+        while offset + vadFrameSize <= samples.count {
+            let frame = Array(samples[offset..<(offset + vadFrameSize)])
             let isSpeech = vad.process(samples: frame)
 
             speechBufferLock.lock()
@@ -94,6 +109,9 @@ class Pipeline: @unchecked Sendable {
 
             offset += vadFrameSize
         }
+
+        // Keep the trailing <512 samples for the next chunk.
+        vadCarry = Array(samples[offset...])
     }
 
     /// Transcribe audio and store in memory
@@ -204,6 +222,10 @@ class Pipeline: @unchecked Sendable {
         guard isRunning else { return }
         isRunning = false
         audioCapture.stopCapture()
+
+        // Drop any partial VAD frame so a later start() doesn't replay stale audio.
+        vadQueue.async { [weak self] in self?.vadCarry.removeAll() }
+        vad.reset()
 
         // Flush any remaining speech
         speechBufferLock.lock()

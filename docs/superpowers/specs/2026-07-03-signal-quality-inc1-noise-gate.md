@@ -38,3 +38,26 @@ the Silero service is genuinely unavailable.
 ## Risks
 - Serial-queue backpressure if VAD + whisper exceed 1s/chunk — mitigated: whisper already runs in a
   detached `Task`; the VAD loop is ~31 fast round-trips (<100ms/chunk).
+
+## Resolution & deeper root cause (found during implementation)
+The Swift-side bugs (framing, timeout) were real but NOT the whole story. `vad_service.py` itself was
+broken, so **Silero had never functioned** — the app was always on the energy gate:
+1. **v4/v5 API mismatch** — the service called Silero with the v4 signature (`h`,`c` states) but the
+   model is v5 (single `state` tensor). Every inference threw, was swallowed by `try/except`, and
+   returned `0.0` → "non-speech" for everything.
+2. **Missing 64-sample context** — Silero v5 requires `[64 prev-samples] + [512 new] = 576` per call;
+   bare 512-frames yield ~0 probability even for loud speech.
+3. **Shared LSTM state** across connections — corruptible; now per-connection.
+
+Fixes (`vad_service.py`): v5 API, 64-sample context carry, per-connection `VADState`.
+Component proof: tone 0% / white-noise 0% / **speech 98%** speech-frames (was 0% for all — broken).
+Also fixed a ~1.5s startup flap to the energy gate (redundant `reconnectSilero`).
+
+## Honest verification note
+Component-level discrimination is decisively proven (numbers above; validated against the reference
+`silero-vad` package on the identical model file). Live acoustic-loopback testing (playing synthetic
+tone/noise through speakers into the mic) is confounded by room coloration, real ambient activity, and
+Whisper hallucinating sentences from noise — so it is not a clean VAD test. Real-world benefit (reject
+fan/keyboard/ambient while a person speaks) rests on the now-functioning neural VAD. Residual: Whisper
+still hallucinates on borderline audio (mitigated by the hallucination filter; fuller fix = Increment 2
+speaker enrollment).

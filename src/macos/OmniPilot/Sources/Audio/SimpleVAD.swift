@@ -1,10 +1,12 @@
 import Foundation
 import Accelerate
 import Network
+import os.log
 
 /// Voice Activity Detection with Silero ONNX backend (via local TCP service)
-/// Falls back to energy-based detection if the Silero service isn't running.
+/// Falls back to energy-based detection ONLY if the Silero service is unavailable.
 class SimpleVAD: @unchecked Sendable {
+    private static let log = Logger(subsystem: "in.sidewall.omnipilot", category: "VAD")
     /// Speech threshold (used for energy fallback)
     var speechThreshold: Float = 0.01
 
@@ -43,11 +45,12 @@ class SimpleVAD: @unchecked Sendable {
             switch state {
             case .ready:
                 self?.useSilero = true
-                print("[VAD] Connected to Silero service (neural network VAD)")
+                self?.reset()   // clear the state machine when the neural VAD (re)connects
+                Self.log.info("Connected to Silero service — using neural VAD")
             case .failed, .cancelled:
                 self?.useSilero = false
                 self?.sileroConnection = nil
-                print("[VAD] Silero service not available, using energy-based fallback")
+                Self.log.error("Silero service unavailable — falling back to energy-based VAD")
             default:
                 break
             }
@@ -85,12 +88,18 @@ class SimpleVAD: @unchecked Sendable {
         return isSpeaking
     }
 
-    /// Process via Silero ONNX service
+    /// Process via Silero ONNX service. Callers MUST pass exactly 512 samples (Silero is stateful;
+    /// wrong-sized or zero-padded frames corrupt its inference). This now runs on Pipeline's VAD
+    /// queue, not the audio thread, so we can afford a real timeout instead of bailing to energy.
     private func processSilero(samples: [Float], connection: NWConnection) -> Bool {
-        // Silero expects exactly 512 samples — pad or truncate
-        var frame = Array(samples.prefix(sileroFrameSize))
-        if frame.count < sileroFrameSize {
-            frame.append(contentsOf: [Float](repeating: 0, count: sileroFrameSize - frame.count))
+        var frame = samples
+        if frame.count != sileroFrameSize {
+            // Defensive: framing is the caller's job, but never send a wrong size to Silero.
+            if frame.count < sileroFrameSize {
+                frame.append(contentsOf: [Float](repeating: 0, count: sileroFrameSize - frame.count))
+            } else {
+                frame = Array(frame.prefix(sileroFrameSize))
+            }
         }
 
         // Send as float32 bytes
@@ -115,11 +124,13 @@ class SimpleVAD: @unchecked Sendable {
             }
         })
 
-        // Wait up to 5ms — Silero inference is typically 2ms. Anything slower means IPC lag,
-        // fall through to energy detection so the audio thread never stalls.
-        let timeout = semaphore.wait(timeout: .now() + .milliseconds(5))
-        if timeout == .timedOut {
-            return processEnergy(samples: samples)
+        // Wait up to 40ms. Silero inference is ~2ms; the headroom absorbs IPC jitter. On the rare
+        // timeout we treat the frame as non-speech (conservative) but STAY on Silero — we do NOT
+        // fall back to the energy gate, which can't distinguish speech from noise. A genuine
+        // connection failure flips `useSilero` off via the state handler.
+        if semaphore.wait(timeout: .now() + .milliseconds(40)) == .timedOut {
+            Self.log.debug("Silero frame timed out (>40ms); treating as non-speech")
+            return false
         }
 
         return result
@@ -143,10 +154,12 @@ class SimpleVAD: @unchecked Sendable {
     /// Check if Silero is active
     var isSileroActive: Bool { useSilero }
 
-    /// Reconnect to Silero service
+    /// Reconnect to Silero service. No-op if already connected — the app calls this after (re)starting
+    /// the VAD service, but if we connected at init there's no need to tear down a healthy connection
+    /// (doing so caused a ~1.5s flap to the energy gate at startup, during which noise could leak).
     func reconnectSilero() {
+        guard !useSilero else { return }
         sileroConnection?.cancel()
-        useSilero = false
         connectToSilero()
     }
 

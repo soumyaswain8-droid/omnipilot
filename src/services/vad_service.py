@@ -22,50 +22,56 @@ WINDOW_SIZE = 512  # Silero v5 expects 512 samples (32ms at 16kHz)
 
 
 class SileroVAD:
+    """Shared Silero v5 ONNX session. The recurrent LSTM state is per-CONNECTION, held by the
+    caller (see VADState), NOT on this object — Silero v5 takes a single combined `state` tensor
+    (2, 1, 128) and returns the next state, unlike v4's separate h/c (2, 1, 64)."""
+
     def __init__(self, model_path: str, threshold: float = 0.5):
         self.threshold = threshold
         opts = ort.SessionOptions()
         opts.inter_op_num_threads = 1
         opts.intra_op_num_threads = 1
         self.session = ort.InferenceSession(model_path, sess_options=opts)
-        self.reset()
+        self._sr = np.array(SAMPLE_RATE, dtype=np.int64)
 
-    def reset(self):
-        self._h = np.zeros((2, 1, 64), dtype=np.float32)
-        self._c = np.zeros((2, 1, 64), dtype=np.float32)
-
-    def process(self, audio: np.ndarray) -> float:
-        """Process a 512-sample frame, return speech probability (0-1)."""
-        if len(audio) != WINDOW_SIZE:
-            return 0.0
-
-        audio_tensor = audio.reshape(1, -1).astype(np.float32)
-        sr = np.array([SAMPLE_RATE], dtype=np.int64)
-
-        ort_inputs = {
-            'input': audio_tensor,
-            'h': self._h,
-            'c': self._c,
-            'sr': sr,
-        }
-
+    def infer(self, contexted_audio: np.ndarray, state: np.ndarray):
+        """Run one frame (64-sample context + 512 new = 576 samples) through the v5 model.
+        Returns (prob, new_state). The 64-sample context is REQUIRED — Silero v5 outputs
+        near-zero probabilities for bare 512-sample frames without it."""
+        audio_tensor = contexted_audio.reshape(1, -1).astype(np.float32)
         try:
-            output, h_new, c_new = self.session.run(None, ort_inputs)
-            self._h = h_new
-            self._c = c_new
-            return float(output[0][0])
+            output, state_new = self.session.run(
+                None, {'input': audio_tensor, 'state': state, 'sr': self._sr}
+            )
+            return float(output[0][0]), state_new
         except Exception as e:
             print(f"[VAD] Inference error: {e}", file=sys.stderr)
-            return 0.0
+            return 0.0, state
+
+
+class VADState:
+    """Per-connection recurrent state + context so concurrent clients don't corrupt each other."""
+    CONTEXT = 64
+
+    def __init__(self, vad: 'SileroVAD'):
+        self.vad = vad
+        self.state = np.zeros((2, 1, 128), dtype=np.float32)
+        self.context = np.zeros(self.CONTEXT, dtype=np.float32)
 
     def is_speech(self, audio: np.ndarray) -> bool:
-        return self.process(audio) > self.threshold
+        if len(audio) != WINDOW_SIZE:
+            return False
+        contexted = np.concatenate([self.context, audio])   # 64 + 512 = 576
+        prob, self.state = self.vad.infer(contexted, self.state)
+        self.context = audio[-self.CONTEXT:].copy()
+        return prob > self.vad.threshold
 
 
 def handle_client(conn, vad):
-    """Handle one client connection."""
+    """Handle one client connection with its OWN recurrent state."""
     buffer = b''
     frame_bytes = WINDOW_SIZE * 4  # float32 = 4 bytes
+    state = VADState(vad)
 
     try:
         while True:
@@ -80,7 +86,7 @@ def handle_client(conn, vad):
                 buffer = buffer[frame_bytes:]
 
                 samples = np.frombuffer(frame_data, dtype=np.float32)
-                is_speech = vad.is_speech(samples)
+                is_speech = state.is_speech(samples)
                 conn.sendall(b'1' if is_speech else b'0')
 
     except (ConnectionResetError, BrokenPipeError):
