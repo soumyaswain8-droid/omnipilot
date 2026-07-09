@@ -19,6 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var popover: NSPopover?
     var pipeline: Pipeline?
     var vadProcess: Process?
+    var meetings: MeetingsController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Start Silero VAD service
@@ -41,6 +42,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let whisper = WhisperBridge()
 
         pipeline = Pipeline(audioCapture: audio, whisper: whisper, memory: memory, ollama: ollama)
+
+        // Meetings feature (Pillar M / M1): detect → record → transcribe → summarize → publish.
+        let mc = MeetingsController(assistant: self.pipeline, whisper: whisper, ollama: ollama)
+        mc.startAutoDetect()
+        self.meetings = mc
 
         // Update menu bar icon based on status
         pipeline?.onStatusUpdate = { [weak self] status in
@@ -150,6 +156,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
+        // Meetings (Pillar M / M1)
+        let mStatus = NSMenuItem(title: meetings?.statusText ?? "Meetings: Idle", action: nil, keyEquivalent: "")
+        mStatus.isEnabled = false
+        menu.addItem(mStatus)
+        let mToggle = NSMenuItem(title: "Start/Stop Meeting", action: #selector(meetingToggle), keyEquivalent: "m")
+        mToggle.target = self
+        mToggle.image = NSImage(systemSymbolName: "record.circle", accessibilityDescription: nil)
+        menu.addItem(mToggle)
+        let mOpen = NSMenuItem(title: "Open Meetings Folder", action: #selector(meetingOpen), keyEquivalent: "")
+        mOpen.target = self
+        mOpen.image = NSImage(systemSymbolName: "folder", accessibilityDescription: nil)
+        menu.addItem(mOpen)
+
+        menu.addItem(NSMenuItem.separator())
+
         let queryItem = NSMenuItem(title: "Open Query (Cmd+Shift+O)", action: #selector(openPopoverFromMenu), keyEquivalent: "o")
         queryItem.image = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: nil)
         menu.addItem(queryItem)
@@ -175,6 +196,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             statusItem?.button?.image = NSImage(systemSymbolName: "brain", accessibilityDescription: "OmniPilot — Off")
         }
     }
+
+    @objc func meetingToggle() { meetings?.manualToggle() }
+    @objc func meetingOpen() { meetings?.openArchive() }
 
     @objc func openPopoverFromMenu() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { self.showPopover() }
