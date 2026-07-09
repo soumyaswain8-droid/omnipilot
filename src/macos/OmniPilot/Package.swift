@@ -15,5 +15,10 @@ let package = Package(
             ],
             path: "Sources"
         ),
+        .testTarget(
+            name: "MeetingsTests",
+            dependencies: ["OmniPilot"],
+            path: "Tests/MeetingsTests"
+        ),
     ]
 )
