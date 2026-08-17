@@ -1,6 +1,6 @@
 # Aide research digest — omnipilot
 
-*Generated 2026-08-13 from Aide captures. 4 item(s); 3 grounded in decoded source content, 1 from the capture note alone.*
+*Generated 2026-08-17 from Aide captures. 4 item(s); 3 grounded in decoded source content, 1 from the capture note alone.*
 
 Each entry links back to the original capture. Full reports and any mindmaps live in `aide/data/items/<id>/`.
 
