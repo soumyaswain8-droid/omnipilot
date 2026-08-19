@@ -38,7 +38,9 @@ stop() {
   pkill -f 'meeting-screen.sh' 2>/dev/null
   pkill -f 'meeting-video.sh'  2>/dev/null
   sleep 3
-  pkill -f 'whisper-server -m' 2>/dev/null
+  # NOTE: run.sh invokes whisper-server with --model (not -m); matching on
+  # 'whisper-server -m' never killed anything and left zombie servers running.
+  pkill -f 'whisper-server' 2>/dev/null
   echo "Stopped."
 }
 

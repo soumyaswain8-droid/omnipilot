@@ -26,9 +26,17 @@ fi
 #   tiny.en  (39MB)  fastest, lowest accuracy
 #   base.en  (141MB) DEFAULT — best speed/accuracy balance, esp. important under Rosetta
 #   small.en (465MB) more accurate, ~3x slower than base
-#   medium.en(1.5GB) most accurate, slow (parked as .park by default)
+#   medium.en(1.5GB) most accurate English-only, slow (parked as .park by default)
+#   large-v3-turbo (1.6GB) DEFAULT when native build present — MULTILINGUAL.
+#     The .en models cannot transcribe Hindi at all; turbo runs 14-18x realtime
+#     with Metal at ~1-2%% WER above large-v3.
 # Prefer the native arm64 + Metal build (vendor/whisper.cpp) — ~14x faster than the Rosetta
 # x86_64 Homebrew binary on Apple Silicon (small.en: ~1s vs ~16s). Falls back to PATH whisper-server.
+# Language: "auto" lets a multilingual model detect Hindi/English code-switching.
+# Forcing "en" with a multilingual model silently discards non-English speech —
+# that plus the English-only small.en model caused the 20-25%% Hindi loss
+# measured on the 2026-08-09 capture. Override with WHISPER_LANG=en.
+WHISPER_LANG="${WHISPER_LANG:-auto}"
 NATIVE_WHISPER="$PROJECT/vendor/whisper.cpp/build/bin/whisper-server"
 if [ -x "$NATIVE_WHISPER" ]; then WHISPER_BIN="$NATIVE_WHISPER"; else WHISPER_BIN="$(command -v whisper-server)"; fi
 
@@ -37,7 +45,7 @@ pick_whisper_model() {
     # With the native+Metal build, small.en (~1s) is the accuracy/speed sweet spot. Without it
     # (Rosetta), prefer base.en for speed. Order the preference accordingly.
     local order
-    if [ -x "$NATIVE_WHISPER" ]; then order="small.en base.en medium.en tiny.en"; else order="base.en small.en tiny.en"; fi
+    if [ -x "$NATIVE_WHISPER" ]; then order="large-v3-turbo small.en base.en medium.en tiny.en"; else order="base.en small.en tiny.en"; fi
     for m in $order; do
         [ -f "$PROJECT/models/ggml-$m.bin" ] && { echo "$PROJECT/models/ggml-$m.bin"; return; }
     done
@@ -54,7 +62,7 @@ start_whisper() {
     fi
     echo "[2/5] Starting Whisper server ($(basename "$model"), $([ -x "$NATIVE_WHISPER" ] && echo 'native arm64+Metal' || echo 'system'))..."
     "$WHISPER_BIN" --model "$model" --host 127.0.0.1 --port 18386 --threads 4 \
-        --language en --no-timestamps &>/dev/null &
+        --language "$WHISPER_LANG" --no-timestamps &>/dev/null &
     # Native build JIT-compiles Metal shaders on first run (~20s), so allow up to 40s.
     for _ in $(seq 1 40); do curl -s -o /dev/null --max-time 2 http://localhost:18386/ && break; sleep 1; done
 }
