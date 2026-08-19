@@ -27,3 +27,14 @@ __pycache__/
 
 # Native whisper.cpp build + local cmake (rebuild via docs/whisper-speed.md)
 vendor/
+
+# Meeting captures — private transcripts, notes, OCR of on-screen content.
+# NEVER commit: contains third-party speech, sales calls, and OCR'd screenshots
+# of whatever was on screen (terminals, browser tabs, credentials).
+data/
+
+# Runtime logs (may contain transcript fragments)
+logs/
+
+# Parked/archived model weights
+models/*.park
