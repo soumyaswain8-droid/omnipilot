@@ -14,7 +14,23 @@ MIN_WINDOW=25                       # seconds of new audio before we transcribe
 
 FFMPEG="$(command -v ffmpeg || echo "$HOME/development/bin/ffmpeg")"
 FFPROBE="$(command -v ffprobe || echo "$HOME/anaconda3/bin/ffprobe")"
-WHISPER_URL="http://127.0.0.1:18386/inference"
+# Prefer the MULTILINGUAL meeting server (18388, large-v3-turbo). Fall back to the
+# always-on voice server (18386, small.en) only if it is not loaded - but warn
+# loudly, because small.en is English-only and silently drops Hindi. On the
+# 2026-08-09 webinar it transcribed 33 chars where turbo transcribed 481.
+# Start the good one with: meeting-ctl.sh whisper start
+MEET_WHISPER_PORT="${MEET_WHISPER_PORT:-18388}"
+_up() { [ "$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:$1/" 2>/dev/null)" = 200 ]; }
+if _up "$MEET_WHISPER_PORT"; then
+  WHISPER_PORT="$MEET_WHISPER_PORT"
+  echo "whisper: multilingual server on :$WHISPER_PORT"
+else
+  WHISPER_PORT=18386
+  echo "WARNING: multilingual whisper (:$MEET_WHISPER_PORT) is NOT running."
+  echo "         Falling back to :18386 (small.en, ENGLISH-ONLY) - any Hindi will be lost."
+  echo "         Start it with: meeting-ctl.sh whisper start"
+fi
+WHISPER_URL="http://127.0.0.1:$WHISPER_PORT/inference"
 OLLAMA_URL="http://localhost:11434/api/generate"
 OLLAMA_MODEL="${OLLAMA_MODEL:-llama3.2:3b}"   # fast, no reasoning trace; qwen3:8b is too slow for a loop
 
