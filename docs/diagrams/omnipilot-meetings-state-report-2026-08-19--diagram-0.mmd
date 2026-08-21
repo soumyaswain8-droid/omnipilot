@@ -1,0 +1,26 @@
+graph TB
+    subgraph SHELL["Shell pipeline — UNTRACKED, but this is what runs"]
+        A[meeting-ctl.sh<br/>status / stop / finalize] --> B[ffmpeg avfoundation :0<br/>mic capture -> WAV]
+        B --> C[meeting-notes.sh<br/>rolling whisper-server]
+        C --> D[Ollama llama3.2:3b<br/>structured notes]
+        A --> E[meeting-screen.sh<br/>screenshot + tesseract OCR]
+        E --> F[links.md + screen-text.txt]
+        A --> G[meeting-video.sh<br/>segmented screencapture]
+        D --> H[notes.md / transcript.md]
+    end
+
+    subgraph SWIFT["Swift module — COMMITTED, but never run on a real meeting"]
+        I[MeetingDetector<br/>CoreAudio + NSWorkspace] --> J[DetectionStateMachine]
+        J --> K[MeetingCoordinator]
+        K --> L[MeetingRecorder]
+        L --> M[MeetingTranscriber]
+        M --> N[TranscriptBuilder]
+        N --> O[MeetingSummarizer]
+        O --> P[ArchivePublisher]
+        K --> Q[MeetingsMenu<br/>menu-bar controls]
+    end
+
+    SHELL -.->|no shared code<br/>no migration path| SWIFT
+
+    style SHELL fill:#fff4e6,stroke:#e67700
+    style SWIFT fill:#e7f5ff,stroke:#1971c2

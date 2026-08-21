@@ -1,0 +1,439 @@
+<title>How We Record Our Meetings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,600&family=Schibsted+Grotesk:wght@500;600;700&display=swap">
+
+<style>
+:root {
+  --paper:   #F1F0EC;
+  --card:    #FAFAF7;
+  --sunk:    #E5E4DE;
+  --ink:     #1E201C;
+  --ink2:    #545850;
+  --ink3:    #85897F;
+  --rule:    #D5D3CB;
+  --rule2:   #AEACA2;
+
+  --indigo:      #3B3F7A;
+  --indigo-soft: #E0E1EF;
+  --ok:          #3D6B4A;
+  --ok-soft:     #DEEADF;
+  --warn:        #8A6A18;
+  --warn-soft:   #EFE8D0;
+  --fail:        #9C3B2E;
+  --fail-soft:   #F1DED9;
+
+  --measure: 65ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #16171A;
+    --card:  #1E2024;
+    --sunk:  #26282D;
+    --ink:   #E8E7E1;
+    --ink2:  #A8ABA3;
+    --ink3:  #7C8078;
+    --rule:  #31343A;
+    --rule2: #454951;
+
+    --indigo:      #9AA0E0;
+    --indigo-soft: #21233A;
+    --ok:          #77BA8B;
+    --ok-soft:     #18271C;
+    --warn:        #D3B45E;
+    --warn-soft:   #2A2416;
+    --fail:        #E08876;
+    --fail-soft:   #2E1B17;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #16171A;
+  --card:  #1E2024;
+  --sunk:  #26282D;
+  --ink:   #E8E7E1;
+  --ink2:  #A8ABA3;
+  --ink3:  #7C8078;
+  --rule:  #31343A;
+  --rule2: #454951;
+
+  --indigo:      #9AA0E0;
+  --indigo-soft: #21233A;
+  --ok:          #77BA8B;
+  --ok-soft:     #18271C;
+  --warn:        #D3B45E;
+  --warn-soft:   #2A2416;
+  --fail:        #E08876;
+  --fail-soft:   #2E1B17;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Literata", Georgia, serif;
+  font-size: 1.03rem;
+  line-height: 1.68;
+  -webkit-font-smoothing: antialiased;
+}
+
+.sheet { max-width: 800px; margin: 0 auto; padding: 0 clamp(1rem,5vw,2.5rem) 5rem; }
+
+/* letterhead */
+.head { padding: clamp(2.4rem,6vw,4rem) 0 1.3rem; border-bottom: 1px solid var(--ink); margin-bottom: 2.4rem; }
+.from {
+  font-family: "Azeret Mono", monospace; font-size: 0.68rem; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink3); margin: 0 0 1.3rem;
+  display: flex; flex-wrap: wrap; gap: 0.3rem 1.4rem;
+}
+.from b { color: var(--indigo); font-weight: 500; }
+h1 {
+  font-family: "Schibsted Grotesk", system-ui, sans-serif; font-weight: 700;
+  font-size: clamp(2rem,6vw,3.3rem); line-height: 1.05; letter-spacing: -0.02em;
+  margin: 0 0 0.8rem; text-wrap: balance;
+}
+.standfirst { font-size: clamp(1.02rem,2.2vw,1.18rem); color: var(--ink2); margin: 0; max-width: 54ch; }
+
+/* asks box */
+.ask {
+  background: var(--indigo-soft); border: 1px solid var(--indigo);
+  padding: 1.15rem 1.4rem; margin: 2rem 0 2.6rem;
+}
+.ask h2 {
+  font-family: "Azeret Mono", monospace; font-size: 0.68rem; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--indigo); margin: 0 0 0.55rem; font-weight: 500;
+}
+.ask p { margin: 0 0 0.6rem; }
+.ask p:last-child { margin: 0; }
+
+section { margin: 0 0 3.2rem; }
+.marker {
+  font-family: "Azeret Mono", monospace; font-size: 0.66rem; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink3); margin: 0 0 0.7rem; display: block;
+}
+h2 {
+  font-family: "Schibsted Grotesk", sans-serif; font-weight: 700;
+  font-size: clamp(1.45rem,3.4vw,2rem); line-height: 1.14; letter-spacing: -0.015em;
+  margin: 0 0 0.85rem; text-wrap: balance;
+}
+h3 {
+  font-family: "Schibsted Grotesk", sans-serif; font-weight: 600;
+  font-size: 1.12rem; margin: 1.9rem 0 0.5rem; line-height: 1.3;
+}
+p { margin: 0 0 1rem; max-width: var(--measure); }
+li { max-width: var(--measure); margin-bottom: 0.4rem; }
+strong { font-weight: 600; }
+code {
+  font-family: "Azeret Mono", monospace; font-size: 0.82em;
+  background: var(--sunk); padding: 0.09em 0.33em; border-radius: 2px;
+}
+a { color: var(--indigo); text-underline-offset: 0.14em; }
+
+/* pipeline */
+.flow { display: grid; gap: 1px; background: var(--rule2); border: 1px solid var(--rule2); margin: 1.6rem 0 1.2rem; }
+.lane { background: var(--card); padding: 0.95rem 1.2rem; display: grid; gap: 0.55rem; }
+@media (min-width: 640px) { .lane { grid-template-columns: 128px 1fr; align-items: baseline; } }
+.lane-n {
+  font-family: "Azeret Mono", monospace; font-size: 0.68rem; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--indigo);
+}
+.lane-b p { margin: 0 0 0.45rem; max-width: none; font-size: 0.96rem; line-height: 1.55; }
+.lane-b p:last-child { margin: 0; }
+.lane-b .spec { font-family: "Azeret Mono", monospace; font-size: 0.76rem; color: var(--ink3); }
+
+/* run records */
+.run {
+  border: 1px solid var(--rule2); background: var(--card); margin: 1.3rem 0; padding: 1.15rem 1.35rem;
+}
+.run-top {
+  display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline;
+  border-bottom: 1px solid var(--rule); padding-bottom: 0.6rem; margin-bottom: 0.75rem;
+}
+.run-date { font-family: "Azeret Mono", monospace; font-size: 0.76rem; color: var(--ink3); }
+.run-name { font-family: "Schibsted Grotesk", sans-serif; font-weight: 600; font-size: 1.06rem; }
+.stamp {
+  margin-left: auto; font-family: "Azeret Mono", monospace; font-size: 0.66rem;
+  letter-spacing: 0.1em; text-transform: uppercase; padding: 0.18rem 0.5rem; border: 1px solid;
+}
+.stamp.ok   { color: var(--ok);   border-color: var(--ok);   background: var(--ok-soft); }
+.stamp.part { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.stamp.fail { color: var(--fail); border-color: var(--fail); background: var(--fail-soft); }
+.run p { margin: 0 0 0.6rem; max-width: none; font-size: 0.97rem; }
+.run p:last-child { margin: 0; }
+
+/* note */
+.note { border-left: 4px solid var(--indigo); background: var(--card); padding: 1rem 1.3rem; margin: 1.4rem 0; border-top: 1px solid var(--rule); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.note.fail { border-left-color: var(--fail); }
+.note.ok { border-left-color: var(--ok); }
+.note h4 {
+  font-family: "Azeret Mono", monospace; font-size: 0.66rem; letter-spacing: 0.12em;
+  text-transform: uppercase; margin: 0 0 0.45rem; color: var(--indigo); font-weight: 500;
+}
+.note.fail h4 { color: var(--fail); }
+.note.ok h4 { color: var(--ok); }
+.note p:last-child { margin-bottom: 0; }
+
+/* tables */
+.sc { overflow-x: auto; margin: 1.3rem 0 1.8rem; border: 1px solid var(--rule2); background: var(--card); }
+table { border-collapse: collapse; width: 100%; min-width: 480px; font-family: "Schibsted Grotesk", sans-serif; font-size: 0.89rem; font-variant-numeric: tabular-nums; }
+caption { caption-side: top; text-align: left; padding: 0.7rem 0.95rem 0.4rem; font-family: "Azeret Mono", monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink3); }
+th, td { text-align: left; padding: 0.55rem 0.95rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th { font-size: 0.69rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3); border-bottom: 1px solid var(--rule2); white-space: nowrap; }
+tbody tr:last-child td { border-bottom: none; }
+tbody th { font-weight: 600; font-size: 0.89rem; }
+td.n, th.n { text-align: right; font-family: "Azeret Mono", monospace; font-size: 0.83rem; }
+
+/* two paths */
+.paths { display: grid; gap: 1px; background: var(--rule2); border: 1px solid var(--rule2); margin: 1.6rem 0 1.5rem; }
+@media (min-width: 700px) { .paths { grid-template-columns: 1fr 1fr; } }
+.path { background: var(--card); padding: 1.2rem 1.35rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.path-h { font-family: "Schibsted Grotesk", sans-serif; font-weight: 700; font-size: 1.14rem; line-height: 1.2; }
+.path-c { font-family: "Azeret Mono", monospace; font-size: 0.72rem; color: var(--indigo); letter-spacing: 0.05em; }
+.path p { margin: 0; max-width: none; font-size: 0.95rem; line-height: 1.55; }
+.path ul { margin: 0; padding-left: 1.05rem; font-size: 0.93rem; }
+
+ul.t { padding-left: 1.1rem; }
+
+.foot { border-top: 1px solid var(--rule2); margin-top: 3rem; padding-top: 1.1rem; font-family: "Schibsted Grotesk", sans-serif; font-size: 0.83rem; color: var(--ink3); }
+.foot p { max-width: 70ch; }
+
+:focus-visible { outline: 2px solid var(--indigo); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="sheet">
+
+<header class="head">
+  <p class="from">
+    <span>To <b>Kishore</b></span>
+    <span>From <b>Soumya</b></span>
+    <span>21 Aug 2026</span>
+    <span>Surya AI — internal</span>
+  </p>
+  <h1>How we record our meetings</h1>
+  <p class="standfirst">A working local meeting recorder that has captured three real sessions. What it does, how it does it, what it produced, and where it falls down.</p>
+</header>
+
+<div class="ask">
+  <h2>What I'm asking</h2>
+  <p>This has been running on my Mac for about six weeks and it works well enough that I use it for real calls. It is not a product — it is five shell scripts and a local model. I want your read on whether it is worth turning into one.</p>
+  <p><strong>If yes, there is real work to do and I've scoped it.</strong> If no, that is a perfectly good answer — I'll keep using it as-is, because it already pays for itself in my own meetings.</p>
+</div>
+
+<section>
+  <span class="marker">01 — The idea</span>
+  <h2>Everything stays on the machine</h2>
+
+  <p>The tool records a meeting, transcribes it, watches the screen, and writes structured notes. All of it runs locally on the laptop — the audio never leaves the machine, there is no account, no server, and no per-minute cost. It is not a bot that joins your call; nothing appears in the participant list, because it is just recording the computer.</p>
+
+  <p>The parts are all open-source and already installed: <strong>ffmpeg 7.1.1</strong> for capture, <strong>whisper.cpp 1.9.1</strong> compiled native arm64 with Metal for speech-to-text, <strong>tesseract 5.5.2</strong> for reading the screen, and <strong>Ollama 0.32.4</strong> running a local language model for the notes. Nothing here is a paid API.</p>
+
+  <p>The reason I built it this way rather than using Otter or Read AI: I was on calls I did not want to send to a third party, and I wanted the links and figures that get shared on screen — which no transcription tool captures, because they are never spoken aloud.</p>
+</section>
+
+<section>
+  <span class="marker">02 — Mechanism</span>
+  <h2>Four things run in parallel during a call</h2>
+
+  <p>When a meeting starts, four loops kick off against the same session. They are independent — if one dies, the others keep going.</p>
+
+  <div class="flow">
+
+    <div class="lane">
+      <span class="lane-n">Audio</span>
+      <div class="lane-b">
+        <p>ffmpeg records the microphone continuously to a growing WAV file.</p>
+        <p class="spec">ffmpeg -f avfoundation -i :0 → 16 kHz mono</p>
+      </div>
+    </div>
+
+    <div class="lane">
+      <span class="lane-n">Transcript</span>
+      <div class="lane-b">
+        <p>Every 150 seconds, a loop measures how much new audio has appeared, slices out only that new window, and sends it to a whisper server running in the background. The result is appended to a running transcript. It only transcribes what it hasn't seen — so cost stays flat no matter how long the meeting runs.</p>
+        <p class="spec">150 s cycle · 25 s minimum window · whisper-server on localhost</p>
+      </div>
+    </div>
+
+    <div class="lane">
+      <span class="lane-n">Screen</span>
+      <div class="lane-b">
+        <p>Every 25 seconds it takes a screenshot, runs OCR on it, extracts any URLs it finds, and keeps unique on-screen lines. The screenshot is deleted immediately after reading. This is the part that catches links pasted in chat, figures on slides, and product names nobody says out loud.</p>
+        <p class="spec">25 s cycle · tesseract · PNG discarded after OCR</p>
+      </div>
+    </div>
+
+    <div class="lane">
+      <span class="lane-n">Video</span>
+      <div class="lane-b">
+        <p>Optional. Records the screen in segments that auto-restart if one stops, then stitches them together at the end. Off by default — it produces large files and is only worth it when you need to re-read something.</p>
+        <p class="spec">segmented screencapture · off unless asked for</p>
+      </div>
+    </div>
+
+  </div>
+
+  <p>When the meeting ends, a final pass reads the whole transcript plus everything OCR'd off the screen, and writes the notes: summary, what was discussed, decisions, questions and answers, a table of figures, links, and action items.</p>
+
+  <div class="note ok">
+    <h4>The one design decision worth knowing about</h4>
+    <p>The notes mark <strong>where each number came from</strong> — <code>[OCR]</code> if it was read off the screen, <code>[audio]</code> if it was heard. Spoken numbers get mistranscribed constantly ("36 triple 9" for ₹36,999). Screen-read numbers are exact. Marking the difference means you know which figures you can trust without going back to the recording. No commercial tool I've looked at does this.</p>
+  </div>
+</section>
+
+<section>
+  <span class="marker">03 — Output</span>
+  <h2>What you get afterwards</h2>
+
+  <p>Every session leaves a folder. These are the actual file sizes from the 9 August capture, a 75-minute webinar:</p>
+
+  <div class="sc">
+    <table>
+      <caption>Artifacts from one 75-minute session</caption>
+      <thead><tr><th>File</th><th class="n">Size</th><th>What it is</th></tr></thead>
+      <tbody>
+        <tr><th><code>notes.md</code></th><td class="n">7.2 KB</td><td>The written notes. This is the thing you actually read</td></tr>
+        <tr><th><code>transcript.md</code></th><td class="n">25 KB</td><td>Raw timestamped transcript — the ground truth to check against</td></tr>
+        <tr><th><code>screen-text.txt</code></th><td class="n">108 KB</td><td>Everything OCR'd off the screen during the call</td></tr>
+        <tr><th><code>links.md</code></th><td class="n">1.4 KB</td><td>Deduplicated URLs with first-seen timestamps</td></tr>
+        <tr><th><code>.wav</code></th><td class="n">1.3 GB</td><td>The recording. Delete or archive after — this is the storage cost</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The notes are markdown, so they render anywhere and go straight into a doc or a PDF. The audio is the only heavy thing; everything readable is under 150 KB per meeting.</p>
+</section>
+
+<section>
+  <span class="marker">04 — Evidence</span>
+  <h2>Three real sessions</h2>
+
+  <p>Rather than describe what it can do, here is what it actually did. Including the one that failed, which taught us the most.</p>
+
+  <div class="run">
+    <div class="run-top">
+      <span class="run-date">15 Jul · 2h 15m</span>
+      <span class="run-name">Online workshop</span>
+      <span class="stamp fail">Failed</span>
+    </div>
+    <p>Captured almost no speech. AirPods were the output device, so everyone else's audio went into the headphones and never reached the microphone — the recorder was only ever hearing my side of a call where I barely spoke. Two and a quarter hours produced about 1.2 KB of sound-effect tags.</p>
+    <p><strong>Then it got worse.</strong> The summariser took that near-empty transcript and invented a complete, confident, entirely fictional set of notes — tools, links, step-by-step instructions, none of it real. Nothing in the output indicated it was fabricated. Only the OCR'd links were genuine.</p>
+  </div>
+
+  <div class="run">
+    <div class="run-top">
+      <span class="run-date">6 Aug · 34m</span>
+      <span class="run-name">Vendor sales call</span>
+      <span class="stamp part">Partial</span>
+    </div>
+    <p>Clean transcript for the first 17 minutes, then the other side's audio genuinely failed and the rest was unusable. Not our fault — the call broke — but it showed something useful: <strong>OCR carried the session after audio died.</strong> Their portal URLs, the platform they were using and their community link all came off the screen, not the microphone.</p>
+    <p>The notes from this one were good enough that I used them to decide not to proceed with the vendor.</p>
+  </div>
+
+  <div class="run">
+    <div class="run-top">
+      <span class="run-date">9 Aug · 75m</span>
+      <span class="run-name">Product webinar</span>
+      <span class="stamp ok">Worked</span>
+    </div>
+    <p>Full 75 minutes of clean audio, no dropout. The notes came out genuinely useful — the offer structure, the pricing ladder, the claims made, the persuasion tactics, and a set of action items. Every financial figure was cross-checked against what was on screen.</p>
+    <p>The limitation showed here too: the presenter switched between Hindi and English constantly, and roughly a fifth of the speech was lost or mangled because the model we were running was <strong>English-only</strong>.</p>
+  </div>
+</section>
+
+<section>
+  <span class="marker">05 — Fixes</span>
+  <h2>What those three sessions changed</h2>
+
+  <p>I fixed four things this week off the back of them. All committed and pushed.</p>
+
+  <ul class="t">
+    <li><strong>It now refuses to write notes from silence.</strong> Before summarising, it strips sound-effect tags and counts actual speech. Below a threshold it writes a diagnostic instead of notes — telling you to check your capture devices. Tested against all three sessions: the July one is refused at 361 characters of real speech; the other two pass at 7,067 and 24,888. The hallucination cannot repeat.</li>
+    <li><strong>Hindi.</strong> The model was English-only, and on top of that the language was hard-coded to English — two separate bugs, either of which alone would have blocked Hindi. Now running a multilingual model with auto-detection. On the same 30-second Hindi-English clip: <strong>33 characters transcribed before, 481 after.</strong></li>
+    <li><strong>The notes template was hard-coded to one specific event</strong> — it produced workshop-shaped notes for every recording regardless of what it was. That is why the sales-call notes had to be written by hand. It now adapts to the kind of session.</li>
+    <li><strong>A stop bug</strong> left a background transcription server running for 23 days across sessions, holding the wrong model.</li>
+  </ul>
+
+  <p>Two servers now run instead of one: a small fast English model for everyday voice, and the large multilingual one loaded only while a meeting is actually recording — it needs 1.6 GB and there is no reason to hold that all day.</p>
+</section>
+
+<section>
+  <span class="marker">06 — Honest limits</span>
+  <h2>Where it falls down</h2>
+
+  <p>Taking these in order of how much they'd matter to anyone other than me:</p>
+
+  <ul class="t">
+    <li><strong>It only hears my side properly.</strong> The AirPods failure is not fully fixed. Capturing the computer's own audio output on a Mac needs a specific system API, and that work is designed but not built. Right now, if your headphones are the output device, the other side may not be recorded. This is the single biggest gap.</li>
+    <li><strong>It doesn't know who is speaking.</strong> One microphone, one merged stream, no speaker labels. So no "Kishore committed to X" — just that it was said. Fixable, but it is real work and will never be as accurate as tools that get per-speaker audio from Zoom directly.</li>
+    <li><strong>Mac only, and a capable Mac.</strong> The multilingual model needs about 1.6 GB of memory and real silicon. On an ordinary Windows laptop it either runs very slowly or has to fall back to a model that cannot do Hindi at all.</li>
+    <li><strong>It is five shell scripts.</strong> No interface, no installer. You start it from a terminal. Fine for me, not fine for anyone else.</li>
+    <li><strong>Hindi is better, not solved.</strong> The multilingual model is a large improvement but standard speech models still handle Hindi-English switching poorly. Getting this genuinely good likely needs an India-specific model.</li>
+    <li><strong>Nobody has been told they're being recorded.</strong> For my own use that is fine — recording a call you're part of is legal in India. As something other people run against third parties, disclosure needs to be built in, not assumed. Two competitors are in court over exactly this.</li>
+  </ul>
+</section>
+
+<section>
+  <span class="marker">07 — Cost</span>
+  <h2>What it costs to run</h2>
+
+  <p>Nothing, which is the interesting part. No subscription, no API, no per-minute charge. A 75-minute meeting costs electricity and about 1.3 GB of disk until you delete the audio.</p>
+
+  <p>For comparison, Read AI — the closest commercial equivalent — is <strong>$15 to $39.75 per person per month</strong>, caps free accounts at five meetings, and puts video playback behind its $29.75 tier.</p>
+
+  <div class="note">
+    <h4>But the cost argument is weaker than it looks</h4>
+    <p>I should be straight about this because it changes the case for building. Hosted transcription has become very cheap — around <strong>$0.04 per hour of audio</strong>. Twenty hours of meetings a month costs about 80 cents to transcribe in the cloud. So "we're free and they're not" is not much of an advantage; commercial tools are not priced on transcription cost. The genuine advantages are that <strong>nothing leaves the machine</strong>, that it <strong>reads the screen</strong>, and that it <strong>works when meeting platforms block recording bots</strong> — which Teams and Google Meet both started doing this year.</p>
+  </div>
+</section>
+
+<section>
+  <span class="marker">08 — Decision</span>
+  <h2>Two reasonable answers</h2>
+
+  <div class="paths">
+
+    <div class="path">
+      <span class="path-c">Option A</span>
+      <span class="path-h">Keep it as an internal tool</span>
+      <p>Cost: nothing. It already works for the person using it. I'd finish the both-sides audio capture so it stops missing half of calls, and leave the rest alone.</p>
+      <p>Perfectly defensible. It has already paid for itself — the notes from the 6 August call directly informed a decision not to spend money.</p>
+    </div>
+
+    <div class="path">
+      <span class="path-c">Option B</span>
+      <span class="path-h">Turn it into something we can give people</span>
+      <p>Roughly six to ten weeks: rewrite the scripts as a proper cross-platform command-line tool, add Windows support, add speaker labels, build the report properly, and design disclosure in from the start.</p>
+      <ul>
+        <li>Windows is <em>easier</em> than Mac for this, oddly — capturing system audio there needs no permission at all</li>
+        <li>Machines that can't run it locally would fall back to hosted transcription at about $0.80 per user per month</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p>My own read: <strong>Option A is not a failure state.</strong> The thing works and I will keep using it either way. Option B is worth doing only if we think there is a customer — and that assumption is completely untested. Nobody outside this building has ever asked for it.</p>
+</section>
+
+<section>
+  <span class="marker">09 — Next</span>
+  <h2>What would help</h2>
+
+  <ul class="t">
+    <li><strong>Try it on one of your calls.</strong> That is the fastest way to judge it — I can set it up on your machine if it's a Mac, and you'll have notes within a few minutes of hanging up. Everything above is easier to assess with a real output in front of you.</li>
+    <li><strong>Tell me whether the notes are actually good.</strong> I've read all three and I am not a neutral judge. If they read as noise to you, that settles it.</li>
+    <li><strong>If you lean towards Option B</strong> — the honest first question is not technical. It's who pays for this, and I don't have an answer yet.</li>
+  </ul>
+
+  <p>There is a deeper write-up on how this compares to the commercial tools, and a separate one on what a cross-platform version would take. Happy to send either if useful, but this is the part that matters first.</p>
+</section>
+
+<div class="foot">
+  <p>All figures measured on the actual system — an M1 Mac, 16 GB, whisper.cpp 1.9.1 native arm64 with Metal — against the three real captures described above, not from documentation or vendor claims. Code is on <code>feat/meetings-m1</code>. Recordings and transcripts stay on my machine and are excluded from the repository.</p>
+  <p>Soumya Swain · soumya@suryaai.co.in</p>
+</div>
+
+</div>

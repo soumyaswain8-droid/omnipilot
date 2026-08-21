@@ -1,0 +1,997 @@
+<title>OmniPilot vs Read AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap">
+
+<style>
+:root {
+  --ground:        #F1F3F1;
+  --surface:       #FAFBFA;
+  --surface-sunk:  #E7EAE7;
+  --ink:           #16211F;
+  --ink-soft:      #4A5754;
+  --ink-faint:     #7B8784;
+  --rule:          #D2D8D4;
+  --rule-strong:   #B4BDB8;
+
+  --copper:        #A9642A;
+  --copper-soft:   #F0E2D2;
+  --teal:          #2F6E62;
+  --teal-soft:     #DCE9E5;
+  --rust:          #A6392C;
+  --rust-soft:     #F2DEDA;
+  --olive:         #87753A;
+  --olive-soft:    #EDE8D6;
+
+  --measure: 68ch;
+  --step--1: 0.815rem;
+  --step-0:  1.0rem;
+  --step-1:  1.22rem;
+  --step-2:  1.55rem;
+  --step-3:  2.0rem;
+  --step-4:  2.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:       #0E1413;
+    --surface:      #161E1C;
+    --surface-sunk: #1E2725;
+    --ink:          #E3E8E5;
+    --ink-soft:     #A3AEAA;
+    --ink-faint:    #77827E;
+    --rule:         #2A3532;
+    --rule-strong:  #3C4844;
+
+    --copper:       #D89A5C;
+    --copper-soft:  #33251A;
+    --teal:         #6FBBA9;
+    --teal-soft:    #172A26;
+    --rust:         #E08977;
+    --rust-soft:    #2E1C19;
+    --olive:        #C6B471;
+    --olive-soft:   #262218;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:       #0E1413;
+  --surface:      #161E1C;
+  --surface-sunk: #1E2725;
+  --ink:          #E3E8E5;
+  --ink-soft:     #A3AEAA;
+  --ink-faint:    #77827E;
+  --rule:         #2A3532;
+  --rule-strong:  #3C4844;
+
+  --copper:       #D89A5C;
+  --copper-soft:  #33251A;
+  --teal:         #6FBBA9;
+  --teal-soft:    #172A26;
+  --rust:         #E08977;
+  --rust-soft:    #2E1C19;
+  --olive:        #C6B471;
+  --olive-soft:   #262218;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  font-size: var(--step-0);
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 clamp(1.1rem, 4vw, 3rem) 6rem;
+}
+
+/* ---------- masthead ---------- */
+
+.masthead {
+  border-bottom: 2px solid var(--ink);
+  padding: clamp(2.5rem, 6vw, 4.5rem) 0 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: var(--step--1);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--copper);
+  margin: 0 0 1.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.2rem;
+}
+.eyebrow span::before { content: "· "; color: var(--rule-strong); }
+.eyebrow span:first-child::before { content: none; }
+
+h1 {
+  font-family: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.4rem, 7vw, 4.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+h1 .vs {
+  color: var(--copper);
+  font-weight: 500;
+}
+
+.deck {
+  font-size: clamp(1.05rem, 2.4vw, 1.3rem);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  max-width: 58ch;
+  margin: 0 0 2rem;
+  font-style: italic;
+}
+
+.meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+}
+.meta-grid div {
+  background: var(--surface);
+  padding: 0.7rem 0.9rem;
+}
+.meta-grid dt {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.25rem;
+}
+.meta-grid dd {
+  margin: 0;
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 0.98rem;
+}
+
+/* ---------- layout ---------- */
+
+.layout { display: block; }
+
+@media (min-width: 1040px) {
+  .layout {
+    display: grid;
+    grid-template-columns: 172px minmax(0, 1fr);
+    gap: 3.5rem;
+    align-items: start;
+  }
+  .rail { position: sticky; top: 2rem; }
+}
+
+.rail { display: none; }
+@media (min-width: 1040px) { .rail { display: block; } }
+
+.rail ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-left: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+}
+.rail a {
+  display: block;
+  padding: 0.42rem 0 0.42rem 0.85rem;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.735rem;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  margin-left: -1px;
+  line-height: 1.35;
+}
+.rail a:hover, .rail a:focus-visible {
+  color: var(--copper);
+  border-left-color: var(--copper);
+}
+
+/* ---------- sections ---------- */
+
+section { margin: 0 0 4rem; scroll-margin-top: 1.5rem; }
+
+.sec-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-top: 1px solid var(--rule-strong);
+  padding-top: 0.55rem;
+  margin: 0 0 1.1rem;
+  display: block;
+}
+
+h2 {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.65rem, 3.6vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+  text-wrap: balance;
+}
+
+h3 {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 600;
+  font-size: var(--step-1);
+  line-height: 1.25;
+  margin: 2.2rem 0 0.6rem;
+  text-wrap: balance;
+}
+
+p { margin: 0 0 1.05rem; max-width: var(--measure); }
+li { max-width: var(--measure); }
+
+a { color: var(--copper); text-underline-offset: 0.15em; }
+
+strong { font-weight: 600; }
+
+code, .mono {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.88em;
+}
+code {
+  background: var(--surface-sunk);
+  padding: 0.1em 0.35em;
+  border-radius: 2px;
+}
+
+/* ---------- verdict panel ---------- */
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--copper);
+  padding: 1.3rem 1.5rem;
+  margin: 1.6rem 0;
+}
+.panel.good { border-left-color: var(--teal); }
+.panel.bad  { border-left-color: var(--rust); }
+.panel.warn { border-left-color: var(--olive); }
+.panel p:last-child { margin-bottom: 0; }
+.panel-title {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0 0 0.6rem;
+  color: var(--copper);
+}
+.panel.good .panel-title { color: var(--teal); }
+.panel.bad  .panel-title { color: var(--rust); }
+.panel.warn .panel-title { color: var(--olive); }
+
+/* ---------- tables ---------- */
+
+.scroller {
+  overflow-x: auto;
+  margin: 1.5rem 0 2rem;
+  border: 1px solid var(--rule);
+  background: var(--surface);
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  min-width: 620px;
+}
+caption {
+  caption-side: top;
+  text-align: left;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding: 0.75rem 1rem 0.5rem;
+}
+th, td {
+  text-align: left;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+thead th {
+  font-weight: 600;
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+tbody tr:last-child td { border-bottom: none; }
+td.num { text-align: right; font-family: "IBM Plex Mono", monospace; font-size: 0.85rem; }
+th.num { text-align: right; }
+tbody th {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.chip {
+  display: inline-block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.16rem 0.45rem;
+  border-radius: 2px;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.chip.have    { background: var(--teal-soft);   color: var(--teal); }
+.chip.gap     { background: var(--rust-soft);   color: var(--rust); }
+.chip.partial { background: var(--olive-soft);  color: var(--olive); }
+.chip.na      { background: var(--surface-sunk);color: var(--ink-faint); }
+
+/* ---------- phase cards ---------- */
+
+.phases {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  margin: 1.8rem 0 2rem;
+}
+@media (min-width: 760px) { .phases { grid-template-columns: repeat(2, 1fr); } }
+
+.phase {
+  background: var(--surface);
+  padding: 1.2rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.phase-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.55rem;
+}
+.phase-id {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--copper);
+  letter-spacing: -0.02em;
+}
+.phase-name {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.08rem;
+  line-height: 1.2;
+}
+.phase-effort {
+  margin-left: auto;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.phase ul { margin: 0; padding-left: 1.1rem; font-size: 0.93rem; line-height: 1.5; }
+.phase li { margin-bottom: 0.3rem; }
+.phase-out {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.74rem;
+  color: var(--ink-soft);
+  border-top: 1px dashed var(--rule);
+  padding-top: 0.55rem;
+  margin-top: auto;
+}
+
+/* ---------- cost figure ---------- */
+
+.costs {
+  display: grid;
+  gap: 1px;
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  margin: 1.6rem 0 2rem;
+}
+.cost {
+  background: var(--surface);
+  padding: 1.1rem 1.2rem;
+}
+.cost-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.4rem;
+}
+.cost-figure {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 1.85rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 0.35rem;
+}
+.cost-figure.accent { color: var(--copper); }
+.cost-note { font-size: 0.84rem; color: var(--ink-soft); line-height: 1.4; margin: 0; }
+
+/* ---------- decisions ---------- */
+
+.decisions { list-style: none; margin: 1.5rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.decisions li {
+  background: var(--surface);
+  padding: 1rem 1.3rem;
+  max-width: none;
+  display: grid;
+  gap: 0.3rem 1.1rem;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+}
+.decisions .d-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-weight: 600;
+  color: var(--copper);
+  font-size: 0.9rem;
+}
+.decisions .d-q {
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.3;
+}
+.decisions .d-a { grid-column: 2; font-size: 0.93rem; color: var(--ink-soft); margin: 0; }
+
+/* ---------- footnote ---------- */
+
+.footnote {
+  border-top: 1px solid var(--rule-strong);
+  margin-top: 3.5rem;
+  padding-top: 1.2rem;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  font-family: "IBM Plex Sans Condensed", sans-serif;
+}
+.footnote p { max-width: 72ch; }
+
+hr.rule { border: none; border-top: 1px solid var(--rule); margin: 2.5rem 0; }
+
+ul.tight { padding-left: 1.15rem; }
+ul.tight li { margin-bottom: 0.4rem; }
+
+:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <p class="eyebrow">
+    <span>Competitive teardown</span>
+    <span>19 Aug 2026</span>
+    <span>Surya AI / Sidewall</span>
+    <span>Internal</span>
+  </p>
+  <h1>OmniPilot <span class="vs">vs</span> Read AI</h1>
+  <p class="deck">What the category leader actually ships, what we actually have, and the narrow path where a local-first Mac recorder beats a $19.75-a-seat cloud notetaker.</p>
+  <dl class="meta-grid">
+    <div><dt>Subject</dt><dd>Meeting capture &amp; reporting</dd></div>
+    <div><dt>Method</dt><dd>6 parallel research agents</dd></div>
+    <div><dt>Our baseline</dt><dd>3 real captures</dd></div>
+    <div><dt>Their price</dt><dd>$0 – $39.75/seat/mo</dd></div>
+    <div><dt>Decision</dt><dd>Build / partner / drop</dd></div>
+  </dl>
+</header>
+
+<div class="layout">
+
+  <nav class="rail" aria-label="Sections">
+    <ol>
+      <li><a href="#verdict">The verdict</a></li>
+      <li><a href="#readai">What Read AI is</a></li>
+      <li><a href="#us">Where we stand</a></li>
+      <li><a href="#matrix">Head to head</a></li>
+      <li><a href="#architecture">Three architectures</a></li>
+      <li><a href="#gaps">Five real gaps</a></li>
+      <li><a href="#consent">The consent problem</a></li>
+      <li><a href="#plan">Build plan</a></li>
+      <li><a href="#business">Can we sell it</a></li>
+      <li><a href="#kill">What kills this</a></li>
+      <li><a href="#decisions">Your decisions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+<section id="verdict">
+  <span class="sec-label">01 — Bottom line up front</span>
+  <h2>We cannot out-feature Read AI. We can out-position it.</h2>
+
+  <p>Read AI is a funded, four-tier product spanning meetings, Gmail, chat and cross-platform search. Matching its surface area is not a realistic goal for a side-built Mac app. But three things have moved in the last six months that open a genuine, narrow lane.</p>
+
+  <div class="panel good">
+    <p class="panel-title">The lane</p>
+    <p><strong>Bots are being locked out.</strong> Microsoft Teams began blocking and labelling third-party recording bots in 2026 (targeted rollout mid-May, GA early June). Google Meet now flags third-party notetakers as a "potential risk" and denies entry by default. Every cloud notetaker in the category — Read AI, Otter, Fireflies, Fathom, tl;dv — depends on a bot getting into the room. <strong>Device-level capture doesn't ask permission from the platform.</strong></p>
+  </div>
+
+  <div class="panel good">
+    <p class="panel-title">The moat</p>
+    <p><strong>Our marginal cost per meeting hour is zero.</strong> Read AI charges $15–$39.75 per seat per month. A bot-based competitor building today pays Recall.ai $0.50 per recording-hour before it earns a rupee. Whisper and Ollama on an M-series Mac cost electricity. That is a structural pricing advantage nobody in the category can copy without abandoning their architecture.</p>
+  </div>
+
+  <div class="panel good">
+    <p class="panel-title">The unfair advantage we already built by accident</p>
+    <p><strong>Screen OCR.</strong> Across our three real captures, OCR carried more weight than the audio: every reliable financial figure in the Aug 9 webinar note, every link in the Aug 6 call after the audio died at 17:03, and the <em>only</em> trustworthy content from the failed July capture. Granola — the one true local-first competitor — is audio-only, transcript-only, no video, no OCR. Read AI's screen intelligence is behind a bot.</p>
+  </div>
+
+  <p>Against that, one correction to an assumption worth killing early:</p>
+
+  <div class="panel bad">
+    <p class="panel-title">Local-first is not a legal shield</p>
+    <p>Granola is currently defending a US federal class action alleging wiretapping — on facts commentators call <em>worse</em> than Otter's, precisely because there is no visible bot and therefore no notice to other participants. Visibility isn't a shield either (Otter is also being sued; motion-to-dismiss hearing 20 May 2026). Local capture is a capability and cost advantage. Sold as a privacy advantage without an explicit disclosure mechanism, it is a liability.</p>
+  </div>
+
+  <p><strong>Recommendation: build it, but scope it as an India-first prosumer and SMB tool with consent designed in from day one — not an enterprise Read AI replacement.</strong> The reasoning runs through the rest of this document.</p>
+</section>
+
+<section id="readai">
+  <span class="sec-label">02 — The benchmark</span>
+  <h2>What Read AI actually ships</h2>
+
+  <p>Verified directly from their own pricing, meeting-report and integrations pages on 19 Aug 2026, with pricing corroborated across four independent aggregators.</p>
+
+  <div class="scroller">
+    <table>
+      <caption>Read AI pricing, per user per month</caption>
+      <thead>
+        <tr><th>Tier</th><th class="num">Monthly</th><th class="num">Annual</th><th>Meeting cap</th><th>What unlocks</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>Free</th><td class="num">$0</td><td class="num">—</td><td>1 hr · 5/mo</td><td>Transcripts, summaries, search, coach, 20+ languages</td></tr>
+        <tr><th>Pro</th><td class="num">$19.75</td><td class="num">$15.00</td><td>4 hr · unlimited</td><td>Premium integrations (Notion, Salesforce, HubSpot, Jira, Zapier), 100 min/mo upload</td></tr>
+        <tr><th>Enterprise</th><td class="num">$29.75</td><td class="num">$22.50</td><td>4 hr · unlimited</td><td><strong>Video playback + highlight reels</strong>, 200 min upload, 5-seat minimum</td></tr>
+        <tr><th>Enterprise+</th><td class="num">$39.75</td><td class="num">$29.75</td><td>8 hr · unlimited</td><td>HIPAA, SAML/SCIM, domain capture, custom retention</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Volume discounts start at 100 seats (10%), reaching 20% at 1,000. Note the tier boundary that matters most to us: <strong>video playback is a $29.75 feature</strong>, and it carries a five-seat minimum. A local recorder that writes an MP4 to disk gives that away at the bottom of the range.</p>
+
+  <h3>Anatomy of their Meeting Report</h3>
+
+  <p>This is the artefact we are actually competing with — the thing a user opens after the call. Eight components:</p>
+
+  <ul class="tight">
+    <li><strong>Summary</strong> — key points, decisions, takeaways</li>
+    <li><strong>Key discussion points</strong> — clickable chapters that jump to the moment</li>
+    <li><strong>Action items</strong> — auto-detected, plus key questions and their answers</li>
+    <li><strong>Annotated transcript</strong> — full dialogue overlaid with participant reactions</li>
+    <li><strong>Audience reactions</strong> — pivotal moments flagged by engagement</li>
+    <li><strong>Playback &amp; highlight reel</strong> — video replay, auto-cut highlights <span class="chip partial">Enterprise only</span></li>
+    <li><strong>Participant deep dive</strong> — talk time, "bias" and "charisma" per speaker</li>
+    <li><strong>Coaching metrics</strong> — live talking-speed and filler-word tracking</li>
+  </ul>
+
+  <div class="panel warn">
+    <p class="panel-title">Where their moat is thinner than it looks</p>
+    <p>The talk-time / bias / charisma / coaching layer <em>all depends on knowing who spoke</em>. Bots get that for free — Zoom RTMS, the Meet Media API and Teams Graph hand back per-participant audio streams already labelled by speaker. It is not a smarter diarization model; it is a structural gift from the platform API. Any local single-microphone product must earn the same labels with ML diarization at roughly 12–14% error. <strong>This is the one gap we cannot close by working harder.</strong> Design around it rather than pretending otherwise.</p>
+  </div>
+
+  <p>Two claims of theirs did not survive verification and should not be cited back at us in a sales conversation: <strong>Smart Scheduler's actual mechanics</strong> (referenced only in passing, no feature page found) and the existence of a <strong>persistent team-level analytics dashboard</strong> (marketed in prose, no UI evidence found). Webex support is claimed on one page and absent from their integrations page.</p>
+</section>
+
+<section id="us">
+  <span class="sec-label">03 — Honest baseline</span>
+  <h2>Where OmniPilot actually stands</h2>
+
+  <p>Better than it looks in one respect and worse in another. The good news first: <strong>OmniPilot is 19,730 lines of Swift</strong>, and most of the expensive substrate for this product already exists and is unrelated to meetings.</p>
+
+  <div class="scroller">
+    <table>
+      <caption>Existing OmniPilot modules relevant to a meeting product</caption>
+      <thead><tr><th>Module</th><th class="num">LOC</th><th>What it gives the meeting product</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><th>Audio</th><td class="num">514</td><td>Native arm64 + Metal whisper bridge, VAD, capture</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>Tasks</th><td class="num">623</td><td><code>TaskScheduler</code>, <code>TaskStore</code>, intent parsing — the reminder engine</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>Memory</th><td class="num">267</td><td>SQLite + embeddings, semantic recall across history</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>App</th><td class="num">863</td><td><code>NotificationHelper</code>, pipeline, voice output</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>LLM</th><td class="num">196</td><td>Ollama client for local summarisation</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>UI</th><td class="num">919</td><td>Query surface</td><td><span class="chip have">Shipping</span></td></tr>
+        <tr><th>Meetings</th><td class="num">624</td><td>Detector, coordinator, recorder, transcriber, summariser, publisher</td><td><span class="chip partial">Unmerged</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>That "reminder and scheduling" capability you asked about is <strong>largely already built</strong> — <code>TaskScheduler.swift</code> and <code>NotificationHelper.swift</code> exist and ship. Wiring them to calendar events is glue, not new machinery.</p>
+
+  <div class="panel bad">
+    <p class="panel-title">The bad news</p>
+    <p>The Meetings module has <strong>never recorded a real meeting</strong>. All three of our actual captures came from five shell scripts — <code>meeting-ctl.sh</code>, <code>meeting-notes.sh</code>, <code>meeting-screen.sh</code>, <code>meeting-video.sh</code>, <code>finalize_notes.py</code> — which are <strong>untracked in git</strong>. The working system is unversioned; the versioned system has never run. Separately, <code>data/</code> is not in <code>.gitignore</code>, so a single <code>git add -A</code> would push sales-call transcripts and OCR'd screenshots of our own terminals to GitHub.</p>
+  </div>
+
+  <h3>What three real captures taught us</h3>
+
+  <div class="scroller">
+    <table>
+      <caption>Capture history</caption>
+      <thead><tr><th>Session</th><th class="num">Length</th><th>Outcome</th><th>Root cause</th></tr></thead>
+      <tbody>
+        <tr><th>15 Jul — AI tools workshop</th><td class="num">2h 15m</td><td><span class="chip gap">Total failure</span></td><td>AirPods were the output device — remote audio never reached the mic. LLM then confabulated a complete fake summary from 1.2 KB of sound-effect tags.</td></tr>
+        <tr><th>6 Aug — Sales call</th><td class="num">34m 08s</td><td><span class="chip partial">Half captured</span></td><td>Clean to 17:03, then genuine audio failure on their side. OCR carried the links through.</td></tr>
+        <tr><th>9 Aug — FlexiFunnels webinar</th><td class="num">75m 38s</td><td><span class="chip have">Good</span></td><td>Full clean audio. But 20–25% of Hindi speech lost, and every financial figure had to be cross-checked against OCR because Whisper mangled the numbers.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="panel">
+    <p class="panel-title">The single highest-leverage fix in this entire document</p>
+    <p>We run <code>ggml-small.en</code>. That is an <strong>English-only model</strong>. The 20–25% Hindi loss is not a model-size problem — it is that the model structurally cannot process Hindi at all. Switching to <strong>large-v3-turbo</strong> (full multilingual training, ~1.6 GB, 14–18× real-time with Metal, roughly 1–2% WER regression against large-v3) is a config change, not a project. It is very likely the largest single quality jump available to us.</p>
+  </div>
+</section>
+
+<section id="matrix">
+  <span class="sec-label">04 — Feature comparison</span>
+  <h2>Head to head</h2>
+
+  <p>Read AI at Pro/Enterprise, Granola as the local-first control, OmniPilot as it stands today.</p>
+
+  <div class="scroller">
+    <table>
+      <caption>Capability matrix, August 2026</caption>
+      <thead>
+        <tr><th>Capability</th><th>Read AI</th><th>Granola</th><th>OmniPilot today</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>Audio transcript</th><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td>Ours is local; theirs is cloud</td></tr>
+        <tr><th>Both-sides audio</th><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td><span class="chip gap">No</span></td><td>Mic-only. The July failure. Design drafted, paused 35 days.</td></tr>
+        <tr><th>Speaker labels</th><td><span class="chip have">Perfect</span></td><td><span class="chip partial">ML</span></td><td><span class="chip gap">None</span></td><td>Theirs from platform APIs, not better models</td></tr>
+        <tr><th>Video recording</th><td><span class="chip partial">$29.75 tier</span></td><td><span class="chip gap">Never</span></td><td><span class="chip partial">Shell only</span></td><td>We have segmented <code>screencapture</code>, untracked</td></tr>
+        <tr><th>Screen OCR</th><td><span class="chip gap">No</span></td><td><span class="chip gap">No</span></td><td><span class="chip have">Yes</span></td><td><strong>Our differentiator.</strong> Links, slides, on-screen figures</td></tr>
+        <tr><th>Action items</th><td><span class="chip have">Auto</span></td><td><span class="chip have">Auto</span></td><td><span class="chip partial">In notes</span></td><td>Ours are prose, not structured objects</td></tr>
+        <tr><th>Chapters / jump-to</th><td><span class="chip have">Yes</span></td><td><span class="chip partial">Partial</span></td><td><span class="chip gap">No</span></td><td>Needs timestamp anchors we already have</td></tr>
+        <tr><th>Talk-time analytics</th><td><span class="chip have">Yes</span></td><td><span class="chip gap">No</span></td><td><span class="chip gap">No</span></td><td>Blocked on diarization</td></tr>
+        <tr><th>Speaking coach</th><td><span class="chip have">Live</span></td><td><span class="chip gap">No</span></td><td><span class="chip gap">No</span></td><td>Low priority for our buyer</td></tr>
+        <tr><th>Calendar auto-detect</th><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td><span class="chip gap">No</span></td><td>EventKit makes this cheap — see §08</td></tr>
+        <tr><th>Pre-meeting reminder</th><td><span class="chip have">Yes</span></td><td><span class="chip partial">Partial</span></td><td><span class="chip partial">Engine exists</span></td><td><code>NotificationHelper</code> + <code>TaskScheduler</code> already ship</td></tr>
+        <tr><th>Scheduling / booking</th><td><span class="chip partial">Unverified</span></td><td><span class="chip gap">No</span></td><td><span class="chip gap">No</span></td><td>Their Smart Scheduler is thinly documented</td></tr>
+        <tr><th>CRM / task push</th><td><span class="chip have">Deep</span></td><td><span class="chip partial">Some</span></td><td><span class="chip gap">No</span></td><td>Todoist/Asana are single-token, easy first targets</td></tr>
+        <tr><th>Cross-meeting search</th><td><span class="chip have">Yes</span></td><td><span class="chip partial">Some</span></td><td><span class="chip have">Yes</span></td><td>Our <code>MemoryStore</code> already does semantic recall</td></tr>
+        <tr><th>Hindi / code-switch</th><td><span class="chip partial">20+ langs</span></td><td><span class="chip partial">Unverified</span></td><td><span class="chip gap">Broken</span></td><td>Fixable today — wrong model, see §03</td></tr>
+        <tr><th>Works when bot is blocked</th><td><span class="chip gap">No</span></td><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td><strong>Teams + Meet now block bots</strong></td></tr>
+        <tr><th>Data leaves the device</th><td><span class="chip gap">Always</span></td><td><span class="chip gap">Yes</span></td><td><span class="chip have">Never</span></td><td>Granola still sends transcripts to model providers</td></tr>
+        <tr><th>Marginal cost / hour</th><td><span class="chip gap">Metered</span></td><td><span class="chip gap">Metered</span></td><td><span class="chip have">Zero</span></td><td>The pricing moat</td></tr>
+        <tr><th>Consent mechanism</th><td><span class="chip partial">Visible bot</span></td><td><span class="chip gap">None — sued</span></td><td><span class="chip gap">None</span></td><td>See §07. Must be built.</td></tr>
+        <tr><th>SOC 2 Type II</th><td><span class="chip have">Yes</span></td><td><span class="chip have">Yes</span></td><td><span class="chip gap">No</span></td><td>9–14 months, $25–80k. Gates enterprise only.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Read the last five rows together. That is the entire product thesis: <strong>we win on availability, cost, on-device privacy and screen intelligence; we lose on speaker attribution, integrations and enterprise trust.</strong> A product built to that shape sells to a different buyer than Read AI's — which is the point.</p>
+</section>
+
+<section id="architecture">
+  <span class="sec-label">05 — The fork in the road</span>
+  <h2>Three architectures, and why hybrid wins</h2>
+
+  <p>Every product in this category picks one of three capture models. The choice determines the cost structure, the legal exposure and the ceiling on quality.</p>
+
+  <div class="scroller">
+    <table>
+      <caption>Capture architecture trade-offs</caption>
+      <thead><tr><th>Path</th><th>Speaker labels</th><th>Cost/hr</th><th>Blocked by Teams/Meet</th><th>Build effort</th></tr></thead>
+      <tbody>
+        <tr><th>Bot joins call<br><span class="mono" style="color:var(--ink-faint)">Recall.ai</span></th><td>Perfect (platform API)</td><td class="num">$0.50</td><td>Increasingly, yes</td><td>Low — one API</td></tr>
+        <tr><th>Native platform SDK<br><span class="mono" style="color:var(--ink-faint)">Zoom RTMS, Meet Media API</span></th><td>Perfect</td><td class="num">varies</td><td>No</td><td>High — per platform, Meet still gated to preview requiring all participants enrolled</td></tr>
+        <tr><th>Local device capture<br><span class="mono" style="color:var(--ink-faint)">Core Audio tap</span></th><td>ML only, ~12–14% DER</td><td class="num">$0.00</td><td>No</td><td>Medium — one-time</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Our existing roadmap already reached this conclusion independently — <code>docs/ROADMAP.md</code> scopes Pillar M as M1 local capture, M2 calendar glue, M3 Recall.ai bot path. That sequencing is still right. One correction: <strong>the paused design doc says Core Audio taps need macOS 14.2; our own earlier research refuted that and logged 14.4 as the true floor.</strong> Fix before it becomes a spec. OmniPilot's deployment target is currently <code>.macOS(.v14)</code> and will need raising.</p>
+
+  <div class="panel">
+    <p class="panel-title">Recommended: local-primary, bot-optional</p>
+    <p>Ship local capture as the default and only path for v1. Add Recall.ai at $0.50/hr later as a paid add-on for meetings the user cannot attend — where the per-hour cost is passed through, not absorbed. That keeps the zero-marginal-cost moat intact for the 95% case while covering the "record it without me" request that will otherwise cost us deals.</p>
+  </div>
+</section>
+
+<section id="gaps">
+  <span class="sec-label">06 — Gap analysis</span>
+  <h2>Five gaps that actually matter</h2>
+
+  <p>Ordered by leverage, not by difficulty. Everything else on the matrix is downstream of these.</p>
+
+  <h3>Gap 1 — We only hear one side of the room</h3>
+  <p>The single biggest functional hole, and the cause of the July total failure. The fix is designed and waiting: a Core Audio process tap (driver-free, macOS 14.4+, no BlackHole, no admin install) capturing the system output mix, live-mixed with the default mic into one WAV — which <code>meeting-notes.sh</code> already knows how to watch. Zero downstream changes. The design has been paused awaiting approval for 35 days.</p>
+
+  <h3>Gap 2 — The transcript is running the wrong model</h3>
+  <p><code>ggml-small.en</code> cannot process Hindi. Move to <strong>large-v3-turbo</strong>. Longer term, <strong>WhisperKit</strong> (Argmax, CoreML/ANE-native) is the strongest macOS path — 1.3–1.8× faster than raw Metal, and since v1.0 it bundles <strong>SpeakerKit</strong>, which matches pyannote's error rate across 13 datasets at roughly an order of magnitude less compute. That single SDK closes transcription speed and diarization together.</p>
+
+  <h3>Gap 3 — Nobody knows who said what</h3>
+  <p>Without speaker labels we cannot produce action items attributed to a person, talk-time analytics, or a sales-call summary worth paying for. Options that run offline on an M1: <strong>pyannote.audio 3.1</strong> (MIT-licensed, free for commercial use, pure PyTorch, CPU-only viable, ~12–14% DER on AMI) or <strong>SpeakerKit</strong> if we adopt WhisperKit. We will not match bot-grade attribution. We can get close enough for a two-to-six person call, which is the meeting shape our buyer actually has.</p>
+
+  <h3>Gap 4 — Notes are prose, not a report</h3>
+  <p>Our notes are genuinely good — arguably better written than Read AI's template output, because they carry source-confidence markers (<code>[OCR]</code> vs <code>[audio]</code>) that Read AI has no equivalent for. But they are a wall of markdown. Read AI's report is <em>navigable</em>: chapters that jump to a timestamp, action items as objects, reactions overlaid on the transcript. We have the timestamps already. This is a rendering problem, not a capture problem.</p>
+
+  <div class="panel good">
+    <p class="panel-title">Keep the confidence markers — they are a real feature</p>
+    <p>Our Aug 9 note distinguishes numbers read off-screen via OCR (reliable) from numbers heard via an English-only model (not). Read AI has no such concept; a hallucinated figure arrives with the same confidence as a real one. After the July confabulation incident we know exactly why that matters. <strong>"Every number is sourced" is a sellable claim no competitor makes.</strong></p>
+  </div>
+
+  <h3>Gap 5 — The summarising model is too small</h3>
+  <p><code>llama3.2:3b</code> is the weakest link in the note quality chain, and it wrote the July hallucination. <strong>qwen2.5:7b</strong> beats Llama-3.1-8B on multilingual work and matches it on English reasoning — the right pick for Hindi-English meeting content. On this 16 GB M1, run it via MLX rather than Ollama; Ollama's MLX backend needs 32 GB before it delivers its speedup.</p>
+</section>
+
+<section id="consent">
+  <span class="sec-label">07 — Non-negotiable</span>
+  <h2>The consent problem is a product requirement</h2>
+
+  <p>This determines whether the thing is sellable at all, so it belongs in the design rather than the terms of service.</p>
+
+  <p>In US all-party-consent states — California, Illinois, Florida, Pennsylvania, Washington, Massachusetts, Maryland and roughly four to six more depending on source — <strong>jurisdiction attaches to where the recorded person sits, not where the recorder sits</strong>. There is no "the organiser agreed" defence covering the other participants. A silent recorder with no indicator is exposed by default the moment any participant is in one of those states.</p>
+
+  <p>India is materially softer: a participant recording their own call is generally legal, and the IT Act imposes no all-party requirement. The real Indian obligation is <strong>DPDP Act 2023</strong>, which attaches once we <em>store and process</em> other people's voices and statements — requiring itemised notice, stated purpose and retention, and a consent-withdrawal mechanism. Phase 3 compliance lands <strong>13 May 2027</strong>, so there is runway, but the product must be built to satisfy it rather than retrofitted.</p>
+
+  <div class="panel warn">
+    <p class="panel-title">Turn the obligation into the differentiator</p>
+    <p>Nobody in this category has solved disclosure well — that is exactly why Otter and Granola are both in court. A local recorder that makes announcing itself <em>effortless</em> (a one-tap "recording notice" posted into the meeting chat, a visible menu-bar state, a spoken or pasted disclosure, per-participant retention controls) is doing something genuinely novel, and it is a claim we can defend in a sales conversation against every competitor named in this document.</p>
+  </div>
+
+  <p><strong>Minimum for v1:</strong> visible recording state in the menu bar, one-click disclosure text to paste into chat, a default retention window with automatic deletion, and an explicit "this call includes participants outside India" warning path. <strong>None of this blocks the engineering work</strong> — it runs alongside.</p>
+
+  <p class="mono" style="font-size:0.82rem;color:var(--ink-faint);max-width:var(--measure)">This is regulatory research, not legal advice. The state list, the DPDP phase status and the GDPR lawful-basis choice all need a licensed attorney before we sell to anyone outside India.</p>
+</section>
+
+<section id="plan">
+  <span class="sec-label">08 — Execution</span>
+  <h2>Build plan</h2>
+
+  <p>Four phases. The first two are largely assembly of parts that already exist; the value only becomes sellable at M3.</p>
+
+  <div class="phases">
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M0</span>
+        <span class="phase-name">Stop the bleeding</span>
+        <span class="phase-effort">~1 day</span>
+      </div>
+      <ul>
+        <li>Add <code>data/</code> to <code>.gitignore</code> before anything else touches the repo</li>
+        <li>Commit the five working shell scripts — they are the product</li>
+        <li>Decide: merge <code>feat/meetings-m1</code> or park it explicitly</li>
+        <li>Swap <code>ggml-small.en</code> → <code>large-v3-turbo</code></li>
+        <li>Swap <code>llama3.2:3b</code> → <code>qwen2.5:7b</code> via MLX</li>
+        <li>Fix the <code>whisper-server</code> pkill pattern in <code>stop</code></li>
+      </ul>
+      <p class="phase-out">Outcome: nothing is at risk, Hindi works, notes get better. No new architecture.</p>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M1</span>
+        <span class="phase-name">Hear the whole room</span>
+        <span class="phase-effort">~1–2 weeks</span>
+      </div>
+      <ul>
+        <li>Build <code>omni-audiotap</code> — Core Audio process tap, ~150 lines Swift</li>
+        <li>Mix tap + mic into one WAV via ffmpeg <code>amix</code></li>
+        <li><code>meeting-ctl.sh start</code> with pre-flight: disk, devices, whisper health</li>
+        <li>Thin-transcript guard — refuse to summarise below a speech threshold</li>
+        <li>Raise deployment target to macOS 14.4</li>
+        <li>Loud degradation warning if the tap is unavailable</li>
+      </ul>
+      <p class="phase-out">Outcome: the July failure becomes structurally impossible. Parity with Granola on capture.</p>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M2</span>
+        <span class="phase-name">Know who spoke, and record the screen</span>
+        <span class="phase-effort">~2–3 weeks</span>
+      </div>
+      <ul>
+        <li>Adopt WhisperKit + SpeakerKit, or pyannote 3.1 as the offline fallback</li>
+        <li>Speaker-attributed transcript feeding the summariser</li>
+        <li>Promote video capture from shell to ScreenCaptureKit</li>
+        <li>Keep the OCR loop — it is the differentiator</li>
+        <li>Structured action items as objects, not prose</li>
+      </ul>
+      <p class="phase-out">Outcome: reports become attributable. Talk-time analytics unlock.</p>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M3</span>
+        <span class="phase-name">The report people pay for</span>
+        <span class="phase-effort">~2–3 weeks</span>
+      </div>
+      <ul>
+        <li>Navigable report UI: chapters jumping to timestamps</li>
+        <li>Source-confidence badges on every figure — OCR vs audio</li>
+        <li>Consent layer: menu-bar state, one-click disclosure, retention policy</li>
+        <li>Export: PDF, markdown, shareable link</li>
+        <li>Push action items to Todoist or Asana (single-token auth)</li>
+      </ul>
+      <p class="phase-out">Outcome: first sellable version. This is the demo.</p>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M4</span>
+        <span class="phase-name">Calendar, reminders, scheduling</span>
+        <span class="phase-effort">~1–2 weeks</span>
+      </div>
+      <ul>
+        <li><strong>EventKit</strong> read — no OAuth, no CASA, no Google review</li>
+        <li>Parse events for meeting URLs: <code>conferenceData</code> first, regex on location/notes as fallback</li>
+        <li><code>UNCalendarNotificationTrigger</code> at start−5min with a "Start recording" action button</li>
+        <li>Arm capture automatically when a detected meeting begins</li>
+        <li>Write-back via EventKit <code>save()</code> — syncs to Google/Exchange through macOS itself</li>
+      </ul>
+      <p class="phase-out">Outcome: reminders + scheduling, using the <code>TaskScheduler</code> we already ship.</p>
+    </article>
+
+    <article class="phase">
+      <div class="phase-head">
+        <span class="phase-id">M5</span>
+        <span class="phase-name">Optional — the bot path</span>
+        <span class="phase-effort">~1 week</span>
+      </div>
+      <ul>
+        <li>Recall.ai at $0.50/recording-hour, no platform fee since 2026</li>
+        <li>Skip their transcription add-on — pull raw audio to local whisper</li>
+        <li>Price as pass-through, not absorbed</li>
+        <li>Only for meetings the user cannot attend in person</li>
+      </ul>
+      <p class="phase-out">Outcome: covers "record it without me" without breaking the cost model.</p>
+    </article>
+
+  </div>
+
+  <div class="panel good">
+    <p class="panel-title">The EventKit shortcut is worth calling out separately</p>
+    <p>Because macOS syncs Google and Exchange accounts into Calendar.app at OS level, <strong>an EventKit app reads Google Meet and Teams events with zero cloud OAuth</strong>. That skips Google's restricted-scope review and the annual CASA assessment entirely — which runs $500–$4,500 for the self-assessment path and into five figures for a full third-party audit, plus weeks of launch delay. For a local Mac app this is a genuine structural advantage over any web-based competitor. The one caveat: it only works if the user has added their account to Calendar.app rather than living in a browser tab.</p>
+  </div>
+</section>
+
+<section id="business">
+  <span class="sec-label">09 — Commercial</span>
+  <h2>Can we actually sell this?</h2>
+
+  <p>Applying the standard test before any of the above gets built: who is the customer, will they pay, how do they find us, what is the smallest thing we can charge for, and what is the weekly target?</p>
+
+  <h3>Who pays</h3>
+  <p><strong>Not enterprises.</strong> SOC 2 Type II is a 9–14 month, $25–80k prerequisite, and Type II specifically requires several months of live control operation before the audit can even begin. That gate is real and it is not worth walking through for a v1.</p>
+
+  <p>The buyer is <strong>Indian consultants, agencies, solo founders and small sales teams who run Hindi-English calls</strong>. This segment is badly served today: Read AI's free tier caps at five meetings a month and one hour, its paid tier starts at $15/seat (roughly ₹1,300), and the whole category transcribes code-switched Hindi-English poorly. They also do exactly the kind of call — screen-shared decks, numbers on screen, pasted links — where our OCR layer beats everyone.</p>
+
+  <h3>The pricing argument</h3>
+
+  <div class="costs">
+    <div class="cost">
+      <p class="cost-label">Read AI Pro</p>
+      <p class="cost-figure">$15</p>
+      <p class="cost-note">per seat / month, annual. Roughly ₹1,300.</p>
+    </div>
+    <div class="cost">
+      <p class="cost-label">Bot competitor's floor cost</p>
+      <p class="cost-figure">$0.50</p>
+      <p class="cost-note">per recording-hour to Recall.ai, before any margin.</p>
+    </div>
+    <div class="cost">
+      <p class="cost-label">Our marginal cost</p>
+      <p class="cost-figure accent">₹0</p>
+      <p class="cost-note">Whisper and Ollama run on the user's own Mac.</p>
+    </div>
+    <div class="cost">
+      <p class="cost-label">Proposed price</p>
+      <p class="cost-figure accent">₹599</p>
+      <p class="cost-note">per seat / month. Unlimited hours, unlimited meetings.</p>
+    </div>
+  </div>
+
+  <p>At ₹599 (~$7) we undercut Read AI's entry paid tier by more than half <em>and</em> offer something they gate at $29.75 — video — with no meeting-length cap, because hours cost us nothing. A bot-based competitor physically cannot match that: at 20 meeting-hours a month their Recall bill alone is $10 against our ₹0.</p>
+
+  <div class="scroller">
+    <table>
+      <caption>Path to first revenue</caption>
+      <thead><tr><th>Milestone</th><th class="num">Seats</th><th class="num">MRR</th><th>What it proves</th></tr></thead>
+      <tbody>
+        <tr><th>Internal team</th><td class="num">3–5</td><td class="num">₹0</td><td>It survives real daily use</td></tr>
+        <tr><th>First paying users</th><td class="num">10</td><td class="num">₹5,990</td><td>Someone outside the building pays</td></tr>
+        <tr><th>90-day target</th><td class="num">40</td><td class="num">₹23,960</td><td>Roughly $280 MRR — the segment is real</td></tr>
+        <tr><th>Viability</th><td class="num">150</td><td class="num">₹89,850</td><td>~$1,050 MRR — worth full attention</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Distribution</h3>
+  <p>The honest answer is that we do not have one yet, and that is the actual risk — not the engineering. The cheapest credible test: a landing page with the ₹599 price and a waitlist, before M2 is finished. If nobody joins the waitlist, the remaining phases should not be built. Beyond that, the natural channels are the existing LaunchGate portfolio, Indian founder and consultant communities, and a public build narrative around "the meeting recorder that works when Teams blocks the bots."</p>
+
+  <div class="panel warn">
+    <p class="panel-title">Test the market before M3, not after</p>
+    <p>M0 through M2 is roughly four to six weeks of work that improves a tool we already use daily — that is defensible regardless of commercial outcome. M3 onward is product investment that only pays off if the buyer exists. Put the landing page up during M1 and let signups decide whether M3 happens.</p>
+  </div>
+</section>
+
+<section id="kill">
+  <span class="sec-label">10 — Pre-mortem</span>
+  <h2>What would kill this</h2>
+
+  <ul class="tight">
+    <li><strong>Apple ships it.</strong> macOS 26 already added <code>SpeechAnalyzer</code> / <code>SpeechTranscriber</code>, purpose-built for long-form audio, with Apple claiming 55% faster than Whisper. A native system-level meeting recorder in macOS 27 would end this category for third parties. Mitigation: that same API is also ours to adopt — it would make us faster, and the OCR, reporting and consent layers stay differentiated.</li>
+    <li><strong>The litigation goes badly.</strong> If the Granola or Otter cases establish that silent local capture is wiretapping, the whole local-first category takes damage. Mitigation: the consent layer in M3, and India-first positioning where the participant-recording question is settled.</li>
+    <li><strong>Speaker attribution stays too weak to sell.</strong> ~12–14% DER may not be good enough for a sales-call product where "who committed to what" is the value. Mitigation: test on real calls at M2 before building M3 on top of it.</li>
+    <li><strong>Nobody wants to install a Mac app.</strong> The whole category is browser-and-cloud for a reason. A native app is a harder install and a Mac-only market. Mitigation: this is precisely what the waitlist test measures.</li>
+    <li><strong>It stays a side project.</strong> The most likely failure. This document describes six to ten weeks of focused work; against 60-plus other projects it becomes another unmerged branch.</li>
+  </ul>
+</section>
+
+<section id="decisions">
+  <span class="sec-label">11 — Over to you</span>
+  <h2>Five decisions only you can make</h2>
+
+  <ol class="decisions">
+    <li>
+      <span class="d-num">01</span>
+      <span class="d-q">Do M0 now?</span>
+      <p class="d-a">Two commands close both standing risks — <code>data/</code> ignored, working scripts committed. The model swaps take an afternoon and fix Hindi. There is no argument against this one.</p>
+    </li>
+    <li>
+      <span class="d-num">02</span>
+      <span class="d-q">Approve the paused both-sides capture design?</span>
+      <p class="d-a">It has waited 35 days. It needs one correction — the macOS floor is 14.4, not 14.2 — and then it can go to spec. Until it lands, every capture repeats the July failure mode.</p>
+    </li>
+    <li>
+      <span class="d-num">03</span>
+      <span class="d-q">Merge <code>feat/meetings-m1</code>, or make shell the product?</span>
+      <p class="d-a">Right now we maintain both and benefit from neither. My read: keep shell as the working pipeline through M1, and port to Swift at M2 when WhisperKit forces the issue anyway. But it should be a stated decision, not drift.</p>
+    </li>
+    <li>
+      <span class="d-num">04</span>
+      <span class="d-q">Is this a product or an internal tool?</span>
+      <p class="d-a">Internal tool: stop after M1, and it is worth it. Product: M0–M4 is six to ten weeks and needs the landing-page test running by M1. Both are legitimate. Choosing neither is what produces another unmerged branch.</p>
+    </li>
+    <li>
+      <span class="d-num">05</span>
+      <span class="d-q">India-first, or chase the global market?</span>
+      <p class="d-a">India-first means the consent question is manageable, the Hindi gap becomes our moat rather than our bug, and ₹599 is a real price. Global means US all-party-consent exposure and a SOC 2 clock before anyone enterprise will talk to us.</p>
+    </li>
+  </ol>
+</section>
+
+<div class="footnote">
+  <p><strong>Method.</strong> Six parallel research agents on 19 Aug 2026, covering Read AI's feature and pricing surface, the competitive landscape, meeting-capture architecture, calendar and scheduling APIs, recording-consent law, and the on-device ASR stack. Read AI figures were fetched directly from read.ai's own pricing, meeting-report and integrations pages and corroborated against four independent aggregators. OmniPilot figures come from the working tree and git history, not from records about it.</p>
+  <p><strong>Known limits.</strong> The authenticated Read AI dashboard at <code>app.read.ai/analytics</code> was not accessible to this research — claims about their live analytics UI rest on marketing copy, and their Smart Scheduler mechanics and team-analytics dashboard remain unverified. Screenshots of that dashboard would sharpen the comparison. Legal content is regulatory research, not advice.</p>
+  <p>Prepared by Soumya Swain · soumya@suryaai.co.in · Internal — Surya AI Technologies</p>
+</div>
+
+  </main>
+</div>
+</div>

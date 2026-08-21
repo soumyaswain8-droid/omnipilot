@@ -1,0 +1,576 @@
+<title>Shipping OmniPilot Beyond One Mac</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Familjen+Grotesk:wght@500;600;700&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+:root {
+  --ground:       #EDEFF1;
+  --surface:      #F8F9FA;
+  --sunk:         #E1E5E8;
+  --ink:          #191E23;
+  --ink-soft:     #4C565E;
+  --ink-faint:    #7E8891;
+  --rule:         #CFD5DA;
+  --rule-hard:    #A9B2B9;
+
+  --blue:         #2B4C8C;
+  --blue-soft:    #DEE5F1;
+  --orange:       #B8471B;
+  --orange-soft:  #F6E0D6;
+  --green:        #2A6B4F;
+  --green-soft:   #D9EAE1;
+  --amber:        #8A6A18;
+  --amber-soft:   #F0E7CE;
+
+  --measure: 66ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:      #12161A;
+    --surface:     #191E23;
+    --sunk:        #222930;
+    --ink:         #E6EAED;
+    --ink-soft:    #A6B0B8;
+    --ink-faint:   #78838B;
+    --rule:        #2E363D;
+    --rule-hard:   #414B53;
+
+    --blue:        #8FAEE0;
+    --blue-soft:   #1A2437;
+    --orange:      #E2865C;
+    --orange-soft: #332016;
+    --green:       #6FBF98;
+    --green-soft:  #16281F;
+    --amber:       #D6B65C;
+    --amber-soft:  #2A2415;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:      #12161A;
+  --surface:     #191E23;
+  --sunk:        #222930;
+  --ink:         #E6EAED;
+  --ink-soft:    #A6B0B8;
+  --ink-faint:   #78838B;
+  --rule:        #2E363D;
+  --rule-hard:   #414B53;
+
+  --blue:        #8FAEE0;
+  --blue-soft:   #1A2437;
+  --orange:      #E2865C;
+  --orange-soft: #332016;
+  --green:       #6FBF98;
+  --green-soft:  #16281F;
+  --amber:       #D6B65C;
+  --amber-soft:  #2A2415;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: "Newsreader", Georgia, serif;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 clamp(1rem,4vw,2.75rem) 5rem; }
+
+/* masthead */
+.mast {
+  padding: clamp(2.5rem,6vw,4rem) 0 1.4rem;
+  border-bottom: 3px double var(--rule-hard);
+  margin-bottom: 2.6rem;
+}
+.tag {
+  font-family: "DM Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 0 0 1.2rem;
+}
+h1 {
+  font-family: "Familjen Grotesk", system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.1rem,6vw,3.7rem);
+  line-height: 1.03;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.9rem;
+  text-wrap: balance;
+}
+.sub {
+  font-size: clamp(1.02rem,2.2vw,1.22rem);
+  color: var(--ink-soft);
+  max-width: 56ch;
+  margin: 0 0 1.9rem;
+}
+.specbar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(140px,1fr));
+  border: 1px solid var(--rule-hard);
+  background: var(--surface);
+}
+.specbar div { padding: 0.65rem 0.85rem; border-right: 1px solid var(--rule); }
+.specbar div:last-child { border-right: none; }
+.specbar dt {
+  font-family: "DM Mono", monospace;
+  font-size: 0.63rem; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 0 0 0.2rem;
+}
+.specbar dd {
+  margin: 0; font-family: "Familjen Grotesk", sans-serif; font-weight: 600; font-size: 0.95rem;
+}
+
+/* layout */
+.cols { display: block; }
+@media (min-width: 1020px) {
+  .cols { display: grid; grid-template-columns: 158px minmax(0,1fr); gap: 3.2rem; align-items: start; }
+  .toc { position: sticky; top: 1.8rem; display: block; }
+}
+.toc { display: none; }
+.toc ol { list-style: none; margin: 0; padding: 0; counter-reset: t; }
+.toc li { counter-increment: t; }
+.toc a {
+  display: grid; grid-template-columns: 1.6rem 1fr; gap: 0.3rem;
+  padding: 0.3rem 0; font-family: "DM Mono", monospace; font-size: 0.72rem;
+  color: var(--ink-faint); text-decoration: none; line-height: 1.3;
+}
+.toc a::before { content: counter(t,decimal-leading-zero); color: var(--rule-hard); }
+.toc a:hover, .toc a:focus-visible { color: var(--blue); }
+.toc a:hover::before { color: var(--blue); }
+
+section { margin: 0 0 3.6rem; scroll-margin-top: 1.4rem; }
+.slabel {
+  font-family: "DM Mono", monospace; font-size: 0.66rem; letter-spacing: 0.17em;
+  text-transform: uppercase; color: var(--ink-faint);
+  border-top: 2px solid var(--ink); padding-top: 0.5rem; margin: 0 0 0.9rem; display: block;
+}
+h2 {
+  font-family: "Familjen Grotesk", sans-serif; font-weight: 700;
+  font-size: clamp(1.5rem,3.4vw,2.15rem); line-height: 1.12; letter-spacing: -0.015em;
+  margin: 0 0 0.9rem; text-wrap: balance;
+}
+h3 {
+  font-family: "Familjen Grotesk", sans-serif; font-weight: 600;
+  font-size: 1.16rem; line-height: 1.25; margin: 2rem 0 0.55rem; text-wrap: balance;
+}
+p { margin: 0 0 1rem; max-width: var(--measure); }
+li { max-width: var(--measure); }
+a { color: var(--blue); text-underline-offset: 0.14em; }
+strong { font-weight: 600; }
+code {
+  font-family: "DM Mono", monospace; font-size: 0.85em;
+  background: var(--sunk); padding: 0.08em 0.32em; border-radius: 2px;
+}
+
+/* callout */
+.note {
+  border: 1px solid var(--rule); border-left: 5px solid var(--blue);
+  background: var(--surface); padding: 1.1rem 1.35rem; margin: 1.4rem 0;
+}
+.note.warn { border-left-color: var(--orange); }
+.note.ok   { border-left-color: var(--green); }
+.note.flag { border-left-color: var(--amber); }
+.note h4 {
+  font-family: "DM Mono", monospace; font-size: 0.67rem; letter-spacing: 0.13em;
+  text-transform: uppercase; margin: 0 0 0.5rem; color: var(--blue); font-weight: 500;
+}
+.note.warn h4 { color: var(--orange); }
+.note.ok h4   { color: var(--green); }
+.note.flag h4 { color: var(--amber); }
+.note p:last-child { margin-bottom: 0; }
+
+/* tables */
+.sc { overflow-x: auto; margin: 1.3rem 0 1.9rem; border: 1px solid var(--rule-hard); background: var(--surface); }
+table {
+  border-collapse: collapse; width: 100%; min-width: 600px;
+  font-family: "Familjen Grotesk", sans-serif; font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+caption {
+  caption-side: top; text-align: left; padding: 0.7rem 0.95rem 0.45rem;
+  font-family: "DM Mono", monospace; font-size: 0.66rem; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+th, td { text-align: left; padding: 0.55rem 0.95rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+thead th {
+  font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink-faint); border-bottom: 2px solid var(--rule-hard); white-space: nowrap; font-weight: 600;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody th { font-weight: 600; font-size: 0.88rem; }
+td.n, th.n { text-align: right; font-family: "DM Mono", monospace; font-size: 0.82rem; }
+tfoot td { border-top: 2px solid var(--rule-hard); font-weight: 600; background: var(--sunk); }
+
+.pill {
+  display: inline-block; font-family: "DM Mono", monospace; font-size: 0.63rem;
+  letter-spacing: 0.07em; text-transform: uppercase; padding: 0.14rem 0.42rem; border-radius: 2px;
+}
+.pill.y { background: var(--green-soft); color: var(--green); }
+.pill.n { background: var(--orange-soft); color: var(--orange); }
+.pill.m { background: var(--amber-soft); color: var(--amber); }
+.pill.i { background: var(--blue-soft); color: var(--blue); }
+
+/* tier ladder */
+.tiers { display: grid; gap: 1px; background: var(--rule-hard); border: 1px solid var(--rule-hard); margin: 1.5rem 0 2rem; }
+.tier { background: var(--surface); padding: 1.05rem 1.3rem; display: grid; gap: 0.75rem; }
+@media (min-width: 720px) { .tier { grid-template-columns: 190px 1fr; align-items: start; } }
+.tier-id { display: flex; flex-direction: column; gap: 0.2rem; }
+.tier-n {
+  font-family: "DM Mono", monospace; font-size: 0.66rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.tier-name {
+  font-family: "Familjen Grotesk", sans-serif; font-weight: 700; font-size: 1.12rem; line-height: 1.15;
+}
+.tier-spec { font-family: "DM Mono", monospace; font-size: 0.72rem; color: var(--blue); }
+.tier-body p { margin: 0 0 0.5rem; max-width: none; font-size: 0.96rem; }
+.tier-body p:last-child { margin-bottom: 0; }
+
+/* cost strip */
+.strip { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 1px; background: var(--rule-hard); border: 1px solid var(--rule-hard); margin: 1.4rem 0 1.9rem; }
+.cell { background: var(--surface); padding: 0.95rem 1.05rem; }
+.cell-l { font-family: "DM Mono", monospace; font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 0.3rem; }
+.cell-v { font-family: "Familjen Grotesk", sans-serif; font-weight: 700; font-size: 1.6rem; line-height: 1; letter-spacing: -0.02em; margin: 0 0 0.25rem; font-variant-numeric: tabular-nums; }
+.cell-v.hi { color: var(--blue); }
+.cell-v.bad { color: var(--orange); }
+.cell-n { font-size: 0.8rem; color: var(--ink-soft); margin: 0; line-height: 1.35; }
+
+ul.t { padding-left: 1.1rem; }
+ul.t li { margin-bottom: 0.35rem; }
+
+.foot {
+  border-top: 2px solid var(--rule-hard); margin-top: 3rem; padding-top: 1.1rem;
+  font-family: "Familjen Grotesk", sans-serif; font-size: 0.82rem; color: var(--ink-faint);
+}
+.foot p { max-width: 74ch; }
+
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="tag">Architecture study · 21 Aug 2026 · Surya AI / Sidewall · Internal</p>
+  <h1>Shipping OmniPilot Beyond One Mac</h1>
+  <p class="sub">The meeting recorder works because it runs on a capable Apple Silicon machine. Most of the team, and nearly all customers, don't have one. Here is what it costs to fix that — in money, in compliance, and in the argument we've been making.</p>
+  <dl class="specbar">
+    <div><dt>Question</dt><dd>Minimum-requirement CLI</dd></div>
+    <div><dt>Method</dt><dd>6 parallel agents</dd></div>
+    <div><dt>Hosted ASR floor</dt><dd>$0.04 / audio-hr</dd></div>
+    <div><dt>COGS at 20 hr/mo</dt><dd>$0.80 / user</dd></div>
+    <div><dt>Verdict</dt><dd>Tiered, not local-only</dd></div>
+  </dl>
+</header>
+
+<div class="cols">
+  <nav class="toc" aria-label="Contents">
+    <ol>
+      <li><a href="#correction">Two corrections</a></li>
+      <li><a href="#bind">The real bind</a></li>
+      <li><a href="#options">Four architectures</a></li>
+      <li><a href="#tiers">The tier ladder</a></li>
+      <li><a href="#floor">Hardware floor</a></li>
+      <li><a href="#cli">Building the CLI</a></li>
+      <li><a href="#money">What's enforceable</a></li>
+      <li><a href="#legal">Cost of leaving the device</a></li>
+      <li><a href="#plan">Build order</a></li>
+      <li><a href="#decisions">Decisions</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+<section id="correction">
+  <span class="slabel">01 — Corrections first</span>
+  <h2>Two things I told you that the research contradicts</h2>
+
+  <div class="note warn">
+    <h4>Correction 1 — the cost moat is much weaker than I claimed</h4>
+    <p>The last report argued our structural advantage was <strong>zero marginal cost</strong>: competitors pay per hour, we pay electricity. That framing doesn't survive contact with current hosted-ASR pricing. <strong>Groq runs Whisper large-v3-turbo at roughly $0.04 per audio-hour.</strong> At 20 hours of meetings a month, that is <strong>$0.80 per user per month</strong> in transcription cost. Read AI charges $15–39.75 a seat. Their price is not set by ASR cost, and neither is ours. Cheap compute is not a moat — it is available to everyone.</p>
+  </div>
+
+  <div class="note warn">
+    <h4>Correction 2 — swapping the model improves Hindi, it does not solve it</h4>
+    <p>I called the model swap the highest-leverage fix available. The measurement on your own audio holds — <strong>33 characters to 481</strong> on the same 30-second clip, a real and large gain. But "this fixes Hindi" was too strong. Whisper-<code>small</code> shows <strong>86.9% WER on Hindi</strong>, and even <code>large-v3</code> shows roughly <strong>32% character error on cross-script code-switched speech</strong> against ~7% for same-script. Stock Whisper at any size is weak on genuine Hindi-English switching. Indic-tuned models — IndicWhisper, Shunya Labs — beat stock Whisper at every size. <strong>large-v3-turbo is a floor, not a finish line.</strong></p>
+  </div>
+
+  <p>Both corrections point the same direction, and it is not the direction the last report pointed: the case for going beyond one Mac is stronger than I made it, and the case for local-only purity is weaker.</p>
+</section>
+
+<section id="bind">
+  <span class="slabel">02 — The constraint that decides everything</span>
+  <h2>Low-spec and Hindi are incompatible locally</h2>
+
+  <p>Taken separately, each problem is solvable. Together they aren't.</p>
+
+  <p>An 8 GB Windows laptop with no discrete GPU <em>can</em> transcribe meetings locally — <code>small</code> at int8 does 13 minutes of audio in 1m42s on an i7-12700K, using under 1.5 GB. A one-hour meeting finishes as a background job in under ten minutes. That is a perfectly good product for English.</p>
+
+  <p>But <code>small</code> is the model with <strong>86.9% WER on Hindi</strong>. The model that handles Hindi acceptably is <code>large-v3</code>-class, which we measured at <strong>1642 MB resident and 9.5 seconds per call on an M1</strong> — and on a CPU-only laptop runs at roughly 2.5× slower than real time, turning a one-hour meeting into a two-and-a-half-hour job.</p>
+
+  <div class="note">
+    <h4>Stated plainly</h4>
+    <p>For English meetings, local works on modest hardware. <strong>For Hindi-English meetings, local requires hardware most of our target customers don't own.</strong> And Hindi-English is precisely the segment we identified as underserved and worth selling to. The two halves of the strategy pull against each other.</p>
+  </div>
+
+  <p>That is the whole reason a hosted tier has to exist. Not because local is bad — because the customers we want are the ones least able to run it.</p>
+</section>
+
+<section id="options">
+  <span class="slabel">03 — The option space</span>
+  <h2>Four architectures, honestly costed</h2>
+
+  <div class="sc">
+    <table>
+      <caption>Capture and processing models</caption>
+      <thead>
+        <tr><th>Architecture</th><th>Runs on</th><th class="n">COGS/user/mo</th><th>Hindi</th><th>Data leaves device</th><th>Effort</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>A · Local-only<br><span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--ink-faint)">today's design</span></th>
+          <td>Capable Mac / 16 GB+</td><td class="n">₹0</td>
+          <td><span class="pill m">Needs big model</span></td><td><span class="pill y">Never</span></td><td>Done-ish</td>
+        </tr>
+        <tr>
+          <th>B · Thin CLI + hosted ASR</th>
+          <td>Any laptop, 4 GB+</td><td class="n">$0.80</td>
+          <td><span class="pill y">Good</span></td><td><span class="pill n">Audio uploaded</span></td><td>Medium</td>
+        </tr>
+        <tr>
+          <th>C · Thin CLI + our GPU box</th>
+          <td>Any laptop</td><td class="n">$1.50–2.50</td>
+          <td><span class="pill y">Good</span></td><td><span class="pill n">Audio uploaded</span></td><td>High</td>
+        </tr>
+        <tr>
+          <th>D · Bot joins call<br><span style="font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--ink-faint)">Recall.ai</span></th>
+          <td>Nothing — no client</td><td class="n">$10.00</td>
+          <td><span class="pill y">Good</span></td><td><span class="pill n">Everything</span></td><td>Low</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Architecture D deserves a note: at $0.50 per recording-hour, 20 hours a month is <strong>$10 per user</strong> — more than the entire ₹599 price we sketched. Bots are cheap to build and expensive to run. That is the opposite of what most people assume, and it is why every bot-based competitor charges $15+ a seat.</p>
+
+  <p>Architecture C only makes sense at volume. A rented RTX 4090 runs about $0.34–0.39/hour and transcribes roughly 6.7 hours of real meeting audio per wall-clock hour, so the compute is around <strong>$0.05/audio-hour</strong> — but you pay for the GPU whether it is busy or not. Below a few hundred hours a month it sits idle and loses to Groq outright.</p>
+
+  <div class="note ok">
+    <h4>Architecture B is the answer for anyone who can't run it locally</h4>
+    <p>$0.80/user/month against a ₹599 (~$7) price is roughly <strong>11% COGS</strong>. That is a healthy software margin, and it needs no infrastructure we have to operate.</p>
+  </div>
+</section>
+
+<section id="tiers">
+  <span class="slabel">04 — Recommendation</span>
+  <h2>Run locally if the machine can. Fall back to hosted if it can't.</h2>
+
+  <p>One product, one CLI, three execution tiers chosen automatically by probing the machine on first run. The user never picks an architecture; they get the best one their hardware supports.</p>
+
+  <div class="tiers">
+
+    <article class="tier">
+      <div class="tier-id">
+        <span class="tier-n">Tier 1 · local</span>
+        <span class="tier-name">Full local</span>
+        <span class="tier-spec">16 GB+ · Apple Silicon or dGPU</span>
+      </div>
+      <div class="tier-body">
+        <p>Everything on-device: <code>large-v3-turbo</code>, local summarisation, screen OCR. Nothing leaves the machine. This is what you run today, and it stays the flagship — it is the version with the strongest privacy and compliance story.</p>
+        <p><strong>COGS: zero.</strong> Marginal cost per meeting: electricity.</p>
+      </div>
+    </article>
+
+    <article class="tier">
+      <div class="tier-id">
+        <span class="tier-n">Tier 2 · hybrid</span>
+        <span class="tier-name">Local capture, hosted transcription</span>
+        <span class="tier-spec">4 GB+ · any OS, no GPU</span>
+      </div>
+      <div class="tier-body">
+        <p>Audio and screen capture stay local — they're cheap. Transcription and summarisation go to Groq. The recording never touches our servers; it goes device → ASR vendor → back. We store the transcript only if the user asks us to.</p>
+        <p><strong>COGS: ~$0.80/user/month</strong> at 20 hours. Requires a zero-retention contract with the ASR vendor and disclosure of them as a sub-processor.</p>
+      </div>
+    </article>
+
+    <article class="tier">
+      <div class="tier-id">
+        <span class="tier-n">Tier 3 · English-only local</span>
+        <span class="tier-name">Offline fallback</span>
+        <span class="tier-spec">8 GB · no network, English</span>
+      </div>
+      <div class="tier-body">
+        <p>For users who cannot or will not send audio anywhere — regulated environments, air-gapped work, deliberate privacy. <code>small</code> int8 runs a one-hour meeting in under ten minutes on CPU alone.</p>
+        <p><strong>Must be labelled honestly:</strong> this tier is not usable for Hindi. Offering it silently for Hindi meetings would reproduce the July failure at product scale.</p>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="note flag">
+    <h4>Nobody ships this, which is both the opportunity and the warning</h4>
+    <p>Tiered local/hosted routing is a documented pattern in AI infrastructure, but the research found <strong>no consumer meeting product doing automatic hardware-based tier selection</strong>. Meetily is local-only with bring-your-own cloud keys; Granola is cloud; Screenpipe is local. Being first is a real differentiator — but the sources also flag why it may not exist: <strong>quality mismatch between tiers is a known UX problem</strong>. A user whose laptop drops them to Tier 3 gets visibly worse notes and will blame the product, not their hardware. If we build this, the tier must be visible, explained, and upgradeable — never silent.</p>
+  </div>
+</section>
+
+<section id="floor">
+  <span class="slabel">05 — Who can run what</span>
+  <h2>The hardware floor, concretely</h2>
+
+  <div class="sc">
+    <table>
+      <caption>Local transcription capability by machine, CPU-only unless noted</caption>
+      <thead>
+        <tr><th>Machine</th><th>Model it can run</th><th class="n">1-hr meeting takes</th><th>English</th><th>Hindi-English</th><th>Tier</th></tr>
+      </thead>
+      <tbody>
+        <tr><th>M1/M2/M3 Mac, 16 GB</th><td><code>large-v3-turbo</code> Metal</td><td class="n">~4 min</td><td><span class="pill y">Good</span></td><td><span class="pill m">Usable</span></td><td>1</td></tr>
+        <tr><th>Windows/Linux + NVIDIA dGPU</th><td><code>large-v3-turbo</code> CUDA</td><td class="n">~3 min</td><td><span class="pill y">Good</span></td><td><span class="pill m">Usable</span></td><td>1</td></tr>
+        <tr><th>Modern laptop, Intel Arc / AMD 680M iGPU</th><td><code>medium</code> Vulkan</td><td class="n">~10-15 min</td><td><span class="pill y">Good</span></td><td><span class="pill n">Weak</span></td><td>2</td></tr>
+        <tr><th>i5/i7 12th-gen, 8 GB, no GPU</th><td><code>small</code> int8</td><td class="n">~8-10 min</td><td><span class="pill y">Good</span></td><td><span class="pill n">Unusable</span></td><td>2 or 3</td></tr>
+        <tr><th>Older i5 8th-gen, 8 GB</th><td><code>small</code> int8</td><td class="n">~15-25 min</td><td><span class="pill m">OK</span></td><td><span class="pill n">Unusable</span></td><td>2 or 3</td></tr>
+        <tr><th>4 GB RAM, any</th><td><code>base</code></td><td class="n">~5-10 min</td><td><span class="pill m">Rough</span></td><td><span class="pill n">Unusable</span></td><td>2</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Two useful facts hide in that table. First, <strong>whisper.cpp's Vulkan backend</strong> gives a claimed 10–12× speedup on integrated graphics — Intel Arc, Iris Xe, AMD 680M — which turns a large class of ordinary office laptops from Tier 3 into something close to Tier 1. Worth testing early; it is the cheapest way to widen the local tier. Second, the caveat: some older Intel iGPUs lack the compute features and <strong>silently fall back to CPU</strong>, so "supports Vulkan" must be measured, not assumed.</p>
+
+  <p>Also note what the earlier audit found: only <strong>two</strong> macOS-specific dependencies exist in the whole 507-line pipeline — <code>screencapture</code> and the <code>avfoundation</code> input string. Everything else already runs everywhere.</p>
+
+  <div class="note">
+    <h4>The irony worth internalising</h4>
+    <p>macOS is the <em>hardest</em> platform for system-audio capture, not the easiest. Windows WASAPI loopback has existed since Vista, needs no admin, no driver, and shows <strong>no permission prompt at all</strong>. Linux exposes a monitor source for every output device. macOS is the one platform where <code>ffmpeg</code> has no system-loopback input whatsoever — which is exactly why the Core Audio tap design has been sitting paused. <strong>Porting to Windows may be easier than finishing macOS.</strong></p>
+  </div>
+</section>
+
+<section id="cli">
+  <span class="slabel">06 — The artefact itself</span>
+  <h2>What the CLI is made of, and what it costs to ship</h2>
+
+  <h3>Language</h3>
+  <p><strong>Rust.</strong> Not a close call once native dependencies are in play: it links whisper.cpp and ffmpeg through FFI cleanly, produces a ~3 MB static binary, and starts in single-digit milliseconds. Go cross-compiles more easily but the moment you need cgo for whisper.cpp that advantage evaporates. Python and Node both bundle a runtime and land at 50–150 MB with fragile native modules.</p>
+  <p>One correction to an assumption I carried: I had expected to reuse DevPilot's Rust CLI, but <strong>there is no Rust source in the DevPilot repo on disk</strong> — <code>dp-cli</code>, <code>dp-gateway</code> and <code>devpilot-core</code> are gone after the reinitialise commit. The toolchain is installed (1.94.1); the codebase is not there. This is a fresh build, not an extension.</p>
+
+  <h3>Signing and distribution — the real friction</h3>
+
+  <div class="strip">
+    <div class="cell"><p class="cell-l">Apple Developer</p><p class="cell-v">$99</p><p class="cell-n">per year. Without it, Gatekeeper blocks first run.</p></div>
+    <div class="cell"><p class="cell-l">Windows signing</p><p class="cell-v">$120</p><p class="cell-n">per year — Azure Trusted Signing at $9.99/mo. OV certs $70–250.</p></div>
+    <div class="cell"><p class="cell-l">Linux</p><p class="cell-v hi">$0</p><p class="cell-n">No OS-level signing gate.</p></div>
+    <div class="cell"><p class="cell-l">SmartScreen</p><p class="cell-v bad">Warns anyway</p><p class="cell-n">EV no longer bypasses it. Reputation must accrue.</p></div>
+  </div>
+
+  <p>That last cell matters more than the money. Since 2024, <strong>EV certificates no longer skip SmartScreen</strong> — new publishers get "Windows protected your PC" regardless of what they paid, until download reputation builds. Budget for early Windows install abandonment; it is not fixable with spend.</p>
+
+  <p>Channels, in order of effort-to-reach: a Homebrew tap and a Scoop bucket (both instant, no review), a <code>curl | sh</code> installer, and GitHub Releases. Add <strong>winget</strong> once the binary is signed and stable — it has the largest Windows reach but each update goes through manifest review, adding days.</p>
+
+  <h3>Models are never bundled</h3>
+  <p>A 1.6 GB model cannot ship inside an installer. The standard pattern — whisper.cpp's own — is first-run download to a cache directory with a progress bar, HTTP range-resume, and a published SHA-256 to verify before use. Host on Cloudflare R2 or Backblaze B2 rather than S3: <strong>1.6 GB per install multiplied across users makes egress the dominant cost</strong> on S3-style pricing.</p>
+</section>
+
+<section id="money">
+  <span class="slabel">07 — Monetisation</span>
+  <h2>Nothing in the binary is enforceable. Plan accordingly.</h2>
+
+  <p>A user who has the binary can patch out any check, extract any embedded key, and run offline forever. License-key validation deters casual sharing and stops nothing else. The research is blunt about this, and the pattern across every successful paid CLI is identical:</p>
+
+  <div class="sc">
+    <table>
+      <caption>What paid CLIs actually charge for</caption>
+      <thead><tr><th>Product</th><th>Client</th><th>The billable layer</th></tr></thead>
+      <tbody>
+        <tr><th>Tailscale</th><td>Open source, runs on device</td><td>The coordination server — device registry, policy, relays</td></tr>
+        <tr><th>ngrok</th><td>No license logic at all</td><td>The tunnel servers. Plan limits enforced per connection</td></tr>
+        <tr><th>Obsidian</th><td>Free, fully local, file-based</td><td>Sync and Publish — hosted services, $4–8/mo</td></tr>
+        <tr><th>1Password CLI</th><td>Thin client</td><td>Vault sync. Without an account it does nothing</td></tr>
+        <tr><th>Screenpipe</th><td>Source-available, local</td><td>Commercial-use licence + a signed desktop build</td></tr>
+        <tr><th>Syncthing</th><td>Fully local, no server</td><td><span class="pill n">Nothing — donations only</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Syncthing is the instructive one. It is excellent, widely used, entirely local — and monetises at essentially zero, because it kept no server-side layer to charge for. <strong>Skipping the server means skipping the revenue.</strong></p>
+
+  <div class="note ok">
+    <h4>Our billable layer, therefore</h4>
+    <p>Give away the local CLI. Charge for the things that genuinely require us: <strong>hosted transcription for machines that can't run it</strong> (Tier 2 — real marginal cost, easy to justify), <strong>team sync and shared meeting history</strong>, and <strong>the report layer</strong> — the navigable, sourced, exportable artefact people actually consume. That is a coherent free-tier story and an honest paid one, and it survives the binary being cracked because the value isn't in the binary.</p>
+  </div>
+</section>
+
+<section id="legal">
+  <span class="slabel">08 — The price of leaving the device</span>
+  <h2>What changes the moment audio leaves the laptop</h2>
+
+  <p>This is the strongest argument against the hosted tier, and it needs stating precisely rather than waved away.</p>
+
+  <p>While audio never leaves the device and we never receive it, the argument that we aren't a <strong>data fiduciary</strong> under India's DPDP Act 2023 is strong — we are not processing third parties' personal data at all. The moment we transmit or store it, that changes, and a defined set of obligations attaches: plain-language notice at collection, valid consent, reasonable security safeguards, breach notification to the Data Protection Board and to affected people, a grievance officer with a 90-day resolution SLA, and honouring access, correction, erasure and consent-withdrawal rights. Penalties run to <strong>₹250 crore</strong> for security-safeguard failures.</p>
+
+  <p>Two things make this more manageable than it first sounds. There is <strong>no data-localisation mandate</strong> — DPDP took a negative-list approach and no restricted-country list has been notified, so using US-based ASR vendors is currently permitted. And an <strong>ephemeral, zero-retention design</strong> — audio transcribed and immediately discarded, never written to our disk — materially narrows the exposure, though it does not eliminate it.</p>
+
+  <div class="note warn">
+    <h4>Vendor gotcha worth catching before it becomes a promise</h4>
+    <p><strong>Deepgram enrols hosted-API customers in its Model Improvement Program by default</strong> — meaning your customers' meeting audio trains their models unless you explicitly opt out. Do not let anyone write "we use a zero-retention provider" in marketing without naming the mode and confirming the configuration. <strong>Groq offers self-serve Zero Data Retention</strong>, with a stated abuse-monitoring log window of up to 30 days — better, but still a disclosable window, not literally nothing.</p>
+  </div>
+
+  <p>Every ASR vendor we wire in becomes a <strong>sub-processor</strong>: it must be disclosed to customers, covered by a DPA, and bound to flow-down security and retention commitments.</p>
+
+  <p style="font-family:'DM Mono',monospace;font-size:0.8rem;color:var(--ink-faint);max-width:var(--measure)">Regulatory research, not legal advice. The claim that local-only processing escapes fiduciary status is a reasonable architectural reading but was not found stated as an explicit DPDP exemption — it needs a data-protection attorney's sign-off before it appears in any marketing claim. The 72-hour breach window and a reported one-year retention floor are practitioner paraphrase, unverified against the final DPDP Rules text.</p>
+</section>
+
+<section id="plan">
+  <span class="slabel">09 — Sequence</span>
+  <h2>Build order</h2>
+
+  <p>Deliberately ordered so the cheapest experiments come first and the expensive commitments wait for evidence.</p>
+
+  <div class="sc">
+    <table>
+      <caption>Phased plan</caption>
+      <thead><tr><th>Step</th><th>What</th><th class="n">Effort</th><th>Why now</th></tr></thead>
+      <tbody>
+        <tr><th>R1</th><td>Pilot Groq, Deepgram and ElevenLabs Scribe on <em>your own</em> Hindi-English audio — the Aug 9 capture is a ready-made benchmark</td><td class="n">1 day</td><td>Every code-switching claim in this document is vendor-stated. No independent Hindi-English benchmark exists. Measure before choosing.</td></tr>
+        <tr><th>R2</th><td>Test whisper.cpp Vulkan on one ordinary Windows laptop</td><td class="n">1 day</td><td>If the 10–12× iGPU claim holds, the local tier widens enormously and Tier 2 shrinks</td></tr>
+        <tr><th>P1</th><td>Extract the pipeline into a Rust CLI with pluggable ASR backends: local whisper.cpp | hosted API</td><td class="n">2-3 wks</td><td>The seam that makes tiering possible. Everything else depends on it</td></tr>
+        <tr><th>P2</th><td>Windows support — WASAPI loopback + <code>gdigrab</code> replacing <code>screencapture</code></td><td class="n">1-2 wks</td><td>Easier than the macOS path. Gets the team onto it</td></tr>
+        <tr><th>P3</th><td>Hardware probe + tier selection, with the chosen tier shown and explained</td><td class="n">1 wk</td><td>The differentiator. Must be visible, never silent</td></tr>
+        <tr><th>P4</th><td>Hosted tier: zero-retention ASR, DPA, sub-processor disclosure, retention controls</td><td class="n">2 wks</td><td>Only after R1 picks a vendor</td></tr>
+        <tr><th>P5</th><td>Signing, Homebrew tap, Scoop bucket, model CDN</td><td class="n">1 wk</td><td>Needed before anyone outside the team installs it</td></tr>
+      </tbody>
+      <tfoot><tr><td colspan="2">R1 + R2 first — two days, and they can invalidate the plan</td><td class="n">2 days</td><td>Cheapest possible disconfirmation</td></tr></tfoot>
+    </table>
+  </div>
+
+  <p>Linux is deliberately absent from P2. Desktop Linux works through PipeWire monitor sources with no extra effort, but <strong>headless and minimal-WM Linux need manual audio-server bring-up</strong> — real friction for a small share of users. Add it when someone asks.</p>
+</section>
+
+<section id="decisions">
+  <span class="slabel">10 — Over to you</span>
+  <h2>What needs deciding</h2>
+
+  <ul class="t">
+    <li><strong>Run R1 and R2 first?</strong> Two days of measurement against claims that are currently all vendor-stated. I'd do nothing else until these land — R1 in particular could change the entire ASR choice, and you already have the perfect test audio.</li>
+    <li><strong>Is the free tier the local CLI?</strong> My read: yes. It costs us nothing to run, it is the strongest privacy story, and it makes the paid hosted tier an obvious upgrade rather than a paywall.</li>
+    <li><strong>Do we accept becoming a data fiduciary?</strong> This is the genuine fork. Tier 2 is what makes the product sellable to the customers we identified — and it is also what puts us under DPDP with real obligations. Staying local-only keeps us clean and keeps us Mac-only.</li>
+    <li><strong>Windows before finishing macOS?</strong> Counterintuitive, but system audio is genuinely easier there, and it is what gets the rest of the team using it.</li>
+    <li><strong>Who is the first non-you user?</strong> Everything above assumes someone other than you wants to run this. That assumption is still untested, and it is cheaper to test than any line item in the plan.</li>
+  </ul>
+</section>
+
+<div class="foot">
+  <p><strong>Method.</strong> Six parallel research agents, 21 Aug 2026: cross-platform system-audio capture, hosted ASR economics, low-spec local inference, CLI packaging and licensing, local-first business patterns, and the compliance delta. Benchmarks marked as measured were run on this machine (M1, 16 GB, whisper.cpp 1.9.1 native arm64 + Metal) against real audio from the 2026-08-09 capture. Everything else is cited research, and vendor claims are labelled as such.</p>
+  <p><strong>Known gaps.</strong> No independent Hindi-English code-switching benchmark exists for any provider — all such claims here are vendor-stated, which is why R1 leads the plan. Groq and OpenAI pricing came from a secondary comparison rather than their own pricing pages. Screenpipe's subscription figure is unconfirmed. The Vulkan iGPU speedup is a release note, not a controlled benchmark. Legal content is regulatory research, not advice.</p>
+  <p>Prepared by Soumya Swain · soumya@suryaai.co.in · Internal — Surya AI Technologies</p>
+</div>
+
+  </main>
+</div>
+</div>
