@@ -110,6 +110,10 @@ print(r)' 2>/dev/null)"
     {
       printf '# Meeting Notes\n\n'
       printf '_Live notes — recording `%s` — updated %s_\n\n' "$(basename "$WAV")" "$(date '+%Y-%m-%d %H:%M:%S')"
+      # Durable capture-caveat banner. regen_notes truncates NOTES every cycle, so a
+      # banner written externally is wiped within one interval - it has to be re-emitted
+      # here or it does not survive. MEETING_CAVEAT is set by meeting-start.sh.
+      [ -n "${MEETING_CAVEAT:-}" ] && printf '%s\n\n' "$MEETING_CAVEAT"
       printf '%s\n' "$notes_body"
     } > "$NOTES"
     log "notes updated -> $NOTES"
@@ -123,6 +127,12 @@ log "notes:      $NOTES"
 while true; do
   dur="$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$WAV" 2>/dev/null | cut -d. -f1)"
   dur="${dur:-0}"
+  # ffprobe returns N/A on a still-growing WAV (RIFF length not yet written).
+  # Left unsanitised, $(( dur - offset )) parses "N/A" as arithmetic N divided by
+  # A and dies under set -u with "N: unbound variable", killing the notes loop
+  # on the very first cycle. Force any non-numeric reading to 0 and wait.
+  case "$dur" in ''|*[!0-9]*) dur=0 ;; esac
+  case "$offset" in ''|*[!0-9]*) offset=0 ;; esac
   new=$(( dur - offset ))
 
   if [ "$new" -ge "$MIN_WINDOW" ]; then

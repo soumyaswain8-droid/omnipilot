@@ -61,7 +61,7 @@ hsize() { du -h "$1" 2>/dev/null | cut -f1; }
 
 status() {
   echo "== Meeting capture status =="
-  echo "audio recorder : $(pgrep -f 'ffmpeg.* -f avfoundation -i :0' >/dev/null && echo RUNNING || echo stopped)   $(hsize "$WAV") $WAV"
+  echo "audio recorder : $(pgrep -f 'ffmpeg.* -f avfoundation -i :' >/dev/null && echo RUNNING || echo stopped)   $(hsize "$WAV") $WAV"
   echo "video recorder : $(pgrep -f 'h264_videotoolbox' >/dev/null && echo RUNNING || echo stopped)   $(hsize "$VIDEO") $VIDEO"
   echo "voice whisper  : $(whisper_up 18386 && echo 'UP :18386 (small.en, latency)' || echo down)"
   echo "meeting whisper: $(whisper_up "$MEET_WHISPER_PORT" && echo "UP :$MEET_WHISPER_PORT (multilingual)" || echo 'down  <-- Hindi will be lost')"
@@ -72,22 +72,63 @@ status() {
   echo "links captured : $(grep -c '^- ' "${BASE}.links.md" 2>/dev/null) urls"
 }
 
+# Escalating kill. ffmpeg holding an avfoundation device routinely ignores BOTH
+# SIGINT and SIGTERM - it blocks in a device read that never returns, so the signal
+# handler never runs. The old version fired one SIGINT, slept 3s and printed
+# "Stopped." unconditionally, which was simply false: recorders survived every stop
+# and the caller had no way to know. Escalate, then VERIFY, then report honestly.
+kill_tree() {
+  local pat="$1" label="$2" sig
+  pgrep -f "$pat" >/dev/null 2>&1 || return 0
+  for sig in INT INT TERM KILL; do
+    pkill -"$sig" -f "$pat" 2>/dev/null
+    sleep 2
+    if ! pgrep -f "$pat" >/dev/null 2>&1; then
+      if [ "$sig" = KILL ]; then echo "  $label: stopped (SIGKILL - container may need repair)"
+      else echo "  $label: stopped (SIG$sig)"; fi
+      return 0
+    fi
+  done
+  echo "  $label: STILL RUNNING after SIGKILL - pids: $(pgrep -f "$pat" | tr '\n' ' ')"
+  return 1
+}
+
+# A container closed by SIGKILL keeps a zero/short RIFF length field, so ffprobe
+# reports N/A and players show 0s. Remux copies the stream into a correct header.
+repair_wav() {
+  local w="$1" d ff
+  [ -f "$w" ] || return 0
+  d="$("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$w" 2>/dev/null | cut -d. -f1)"
+  case "$d" in ''|*[!0-9]*)
+    ff="$(command -v ffmpeg || echo "$HOME/anaconda3/bin/ffmpeg")"
+    echo "  repairing truncated header: $(basename "$w")"
+    "$ff" -nostdin -v error -i "$w" -c copy -y "${w}.fixed" 2>/dev/null \
+      && mv -f "${w}.fixed" "$w" \
+      && echo "    -> $("$FFPROBE" -v error -show_entries format=duration -of csv=p=0 "$w" | cut -d. -f1)s"
+    ;;
+  esac
+}
+
 stop() {
-  echo "Stopping recorders gracefully..."
-  # SIGINT the two ffmpeg recorders so they finalize their containers cleanly
-  pkill -INT -f 'ffmpeg.* -f avfoundation -i :0' 2>/dev/null   # audio
-  pkill -INT -f 'h264_videotoolbox' 2>/dev/null                # video
-  # loops + server
-  pkill -f 'meeting-notes.sh'  2>/dev/null
-  pkill -f 'meeting-screen.sh' 2>/dev/null
-  pkill -f 'meeting-video.sh'  2>/dev/null
-  sleep 3
+  local rc=0
+  echo "Stopping recorders..."
+  # Match ANY device index, not just :0 - the old ':0' pattern missed every recorder
+  # started on another device (AirPods often enumerate ahead of the built-in mic,
+  # shifting the internal mic to :1).
+  kill_tree 'ffmpeg.* -f avfoundation -i :' 'audio recorder' || rc=1
+  kill_tree 'h264_videotoolbox'              'video recorder' || rc=1
+  kill_tree 'meeting-notes.sh'               'notes loop'     || rc=1
+  kill_tree 'meeting-screen.sh'              'ocr loop'       || rc=1
+  kill_tree 'meeting-video.sh'               'video loop'     || rc=1
+
+  [ -n "$WAV" ] && repair_wav "$WAV"
+
   # Only unload the MEETING server. The one on 18386 serves the live voice
-  # assistant and must survive. (The old pattern 'whisper-server -m' matched
-  # nothing at all - run.sh uses --model - so stop never killed anything and
-  # left a server running for 23 days.)
+  # assistant and must survive.
   whisper_stop
-  echo "Stopped."
+
+  if [ "$rc" = 0 ]; then echo "Stopped."; else echo "STOP INCOMPLETE - see above."; fi
+  return "$rc"
 }
 
 finalize() {
@@ -95,7 +136,7 @@ finalize() {
   [ -z "$DEST" ] && { echo "No destination known"; exit 1; }
   mkdir -p "$DEST"
   # ensure recorders are stopped so files are complete
-  pgrep -f 'ffmpeg.* -f avfoundation -i :0' >/dev/null && stop
+  pgrep -f 'ffmpeg.* -f avfoundation -i :' >/dev/null && stop
   echo "Consolidating meeting artifacts into: $DEST"
   # move the internal-side artifacts (audio + text) alongside the video already on the external disk
   for f in "$WAV" "${BASE}.transcript.md" "${BASE}.notes.md" "${BASE}.links.md" "${BASE}.screen-text.txt"; do
