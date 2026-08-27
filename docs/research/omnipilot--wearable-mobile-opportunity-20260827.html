@@ -1,0 +1,416 @@
+<title>The Hinglish Gap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap">
+
+<style>
+:root {
+  --bg:      #FFFFFF;
+  --panel:   #F6F7F6;
+  --sunk:    #EBEEEC;
+  --ink:     #111311;
+  --ink2:    #4B524D;
+  --ink3:    #808780;
+  --line:    #D8DDD9;
+  --line2:   #A8B0AA;
+
+  --pine:      #0F5C4A;
+  --pine-soft: #DCEAE5;
+  --rust:      #B3402B;
+  --rust-soft: #F6E2DD;
+  --amber:     #94711A;
+  --amber-soft:#F2EAD3;
+
+  --measure: 64ch;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:     #0D100E;
+    --panel:  #161A18;
+    --sunk:   #1E2320;
+    --ink:    #ECEFEC;
+    --ink2:   #A5ADA7;
+    --ink3:   #7A827C;
+    --line:   #2A302C;
+    --line2:  #3E4741;
+
+    --pine:      #6FC4A9;
+    --pine-soft: #12291F;
+    --rust:      #E58A72;
+    --rust-soft: #2D1913;
+    --amber:     #D6B559;
+    --amber-soft:#292213;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg:     #0D100E;
+  --panel:  #161A18;
+  --sunk:   #1E2320;
+  --ink:    #ECEFEC;
+  --ink2:   #A5ADA7;
+  --ink3:   #7A827C;
+  --line:   #2A302C;
+  --line2:  #3E4741;
+
+  --pine:      #6FC4A9;
+  --pine-soft: #12291F;
+  --rust:      #E58A72;
+  --rust-soft: #2D1913;
+  --amber:     #D6B559;
+  --amber-soft:#292213;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: "Public Sans", system-ui, sans-serif;
+  font-size: 1.02rem; line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 1060px; margin: 0 auto; padding: 0 clamp(1rem,4vw,2.5rem) 5rem; }
+
+/* opening */
+.open { padding: clamp(2.5rem,7vw,5rem) 0 0; }
+.kicker {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.7rem;
+  letter-spacing: 0.15em; text-transform: uppercase; color: var(--pine);
+  margin: 0 0 1.6rem;
+}
+h1 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: clamp(2.8rem,9vw,6rem); line-height: 0.98; letter-spacing: -0.015em;
+  margin: 0 0 1.3rem; text-wrap: balance;
+}
+h1 em { font-style: italic; color: var(--pine); }
+.lede {
+  font-size: clamp(1.1rem,2.5vw,1.42rem); line-height: 1.45; color: var(--ink2);
+  max-width: 46ch; margin: 0 0 2.4rem;
+}
+.byline {
+  display: flex; flex-wrap: wrap; gap: 0.4rem 1.5rem;
+  font-family: "Spline Sans Mono", monospace; font-size: 0.72rem;
+  color: var(--ink3); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--line);
+  padding: 0.7rem 0; margin-bottom: 3rem;
+}
+
+section { margin: 0 0 3.6rem; }
+.snum {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.68rem;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink3);
+  margin: 0 0 0.6rem; display: block;
+}
+h2 {
+  font-family: "Instrument Serif", Georgia, serif; font-weight: 400;
+  font-size: clamp(1.9rem,4.5vw,2.9rem); line-height: 1.08; letter-spacing: -0.01em;
+  margin: 0 0 0.9rem; text-wrap: balance;
+}
+h3 {
+  font-family: "Public Sans", sans-serif; font-weight: 700;
+  font-size: 1.08rem; letter-spacing: 0.005em; margin: 1.9rem 0 0.5rem; line-height: 1.3;
+}
+p { margin: 0 0 1rem; max-width: var(--measure); }
+li { max-width: var(--measure); margin-bottom: 0.4rem; }
+strong { font-weight: 700; }
+a { color: var(--pine); text-underline-offset: 0.14em; }
+code {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.85em;
+  background: var(--sunk); padding: 0.09em 0.33em; border-radius: 2px;
+}
+
+/* pull quote */
+.pull {
+  border-left: 3px solid var(--pine); padding: 0.2rem 0 0.2rem 1.4rem;
+  margin: 1.8rem 0; max-width: 56ch;
+}
+.pull p {
+  font-family: "Instrument Serif", Georgia, serif; font-size: clamp(1.3rem,3vw,1.75rem);
+  line-height: 1.28; font-style: italic; color: var(--ink); margin: 0 0 0.5rem; max-width: none;
+}
+.pull cite {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.7rem; font-style: normal;
+  color: var(--ink3); letter-spacing: 0.05em;
+}
+
+/* callouts */
+.box {
+  background: var(--panel); border: 1px solid var(--line);
+  border-top: 3px solid var(--pine); padding: 1.15rem 1.4rem; margin: 1.6rem 0;
+}
+.box.warn { border-top-color: var(--rust); }
+.box.flag { border-top-color: var(--amber); }
+.box h4 {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.67rem; letter-spacing: 0.13em;
+  text-transform: uppercase; margin: 0 0 0.55rem; color: var(--pine); font-weight: 500;
+}
+.box.warn h4 { color: var(--rust); }
+.box.flag h4 { color: var(--amber); }
+.box p:last-child { margin-bottom: 0; }
+
+/* figures strip */
+.figs {
+  display: grid; grid-template-columns: repeat(auto-fit,minmax(158px,1fr));
+  gap: 1px; background: var(--line2); border: 1px solid var(--line2); margin: 1.7rem 0 2rem;
+}
+.fig { background: var(--bg); padding: 1.1rem 1.1rem; }
+.fig-v {
+  font-family: "Instrument Serif", Georgia, serif; font-size: 2.5rem; line-height: 0.95;
+  margin: 0 0 0.35rem; letter-spacing: -0.01em; font-variant-numeric: tabular-nums;
+}
+.fig-v.p { color: var(--pine); }
+.fig-l {
+  font-family: "Spline Sans Mono", monospace; font-size: 0.66rem; letter-spacing: 0.09em;
+  text-transform: uppercase; color: var(--ink3); margin: 0 0 0.3rem;
+}
+.fig-n { font-size: 0.83rem; color: var(--ink2); margin: 0; line-height: 1.4; }
+
+/* tables */
+.sc { overflow-x: auto; margin: 1.4rem 0 2rem; border: 1px solid var(--line2); }
+table {
+  border-collapse: collapse; width: 100%; min-width: 580px;
+  font-family: "Public Sans", sans-serif; font-size: 0.88rem; font-variant-numeric: tabular-nums;
+  background: var(--bg);
+}
+caption {
+  caption-side: top; text-align: left; padding: 0.7rem 0.95rem 0.45rem; background: var(--panel);
+  font-family: "Spline Sans Mono", monospace; font-size: 0.66rem; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink3);
+}
+th, td { text-align: left; padding: 0.55rem 0.95rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+thead th {
+  font-size: 0.69rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink3);
+  border-bottom: 1px solid var(--line2); white-space: nowrap; font-weight: 600;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody th { font-weight: 600; font-size: 0.88rem; }
+td.n, th.n { text-align: right; font-family: "Spline Sans Mono", monospace; font-size: 0.82rem; }
+
+.tag {
+  display: inline-block; font-family: "Spline Sans Mono", monospace; font-size: 0.63rem;
+  letter-spacing: 0.07em; text-transform: uppercase; padding: 0.14rem 0.42rem; border-radius: 2px; white-space: nowrap;
+}
+.tag.live { background: var(--pine-soft); color: var(--pine); }
+.tag.gone { background: var(--rust-soft); color: var(--rust); }
+.tag.mid  { background: var(--amber-soft); color: var(--amber); }
+
+/* options */
+.opts { display: grid; gap: 1px; background: var(--line2); border: 1px solid var(--line2); margin: 1.7rem 0; }
+@media (min-width: 800px) { .opts { grid-template-columns: repeat(3,1fr); } }
+.opt { background: var(--bg); padding: 1.2rem 1.3rem; display: flex; flex-direction: column; gap: 0.6rem; }
+.opt.pick { background: var(--pine-soft); }
+.opt-l { font-family: "Spline Sans Mono", monospace; font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink3); }
+.opt.pick .opt-l { color: var(--pine); }
+.opt-h { font-family: "Instrument Serif", Georgia, serif; font-size: 1.5rem; line-height: 1.12; }
+.opt p { margin: 0; max-width: none; font-size: 0.93rem; line-height: 1.5; }
+.opt .verdict { font-family: "Spline Sans Mono", monospace; font-size: 0.7rem; color: var(--ink3); margin-top: auto; padding-top: 0.5rem; border-top: 1px solid var(--line); }
+.opt.pick .verdict { color: var(--pine); border-top-color: var(--pine); }
+
+ul.t { padding-left: 1.15rem; }
+
+.foot { border-top: 1px solid var(--ink); margin-top: 3.2rem; padding-top: 1.1rem; font-size: 0.83rem; color: var(--ink3); }
+.foot p { max-width: 72ch; }
+
+:focus-visible { outline: 2px solid var(--pine); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="page">
+
+<header class="open">
+  <p class="kicker">Opportunity analysis · Wearables, mobile &amp; web</p>
+  <h1>The <em>Hinglish</em> gap</h1>
+  <p class="lede">The AI note-taker category has one clear winner, several corpses, and a hole in it shaped exactly like the bug we measured on our own audio three weeks ago.</p>
+  <p class="byline">
+    <span>27 Aug 2026</span>
+    <span>Surya AI / Sidewall</span>
+    <span>6 research agents</span>
+    <span>Internal</span>
+  </p>
+</header>
+
+<section>
+  <span class="snum">01 — The finding</span>
+  <h2>The gap is not Hindi. It is code-switching.</h2>
+
+  <p>This matters because the two lead to completely different products. Hindi transcription is <strong>already well served</strong> — vendors claim above 95% accuracy, one reports 5.7% word error rate. If the pitch were "we do Hindi," we would be entering a solved market late.</p>
+
+  <p>What breaks is Hindi and English <em>mixed inside a single sentence</em>, which is how Indian professionals actually talk.</p>
+
+  <div class="pull">
+    <p>Each region has its own code-switching pattern, and each one breaks global AI transcription tools that expect a single language setting.</p>
+    <cite>— transcription-tool market review, 2026</cite>
+  </div>
+
+  <p>We have first-hand evidence, not a vendor claim. On 30 seconds of a real Hindi-English webinar recorded on 9 August, the English-only model returned <strong>33 characters</strong> — seven words. The multilingual model returned <strong>481</strong>. Same audio, same machine, same minute.</p>
+
+  <div class="box">
+    <h4>And the timing is unusually good</h4>
+    <p><strong>Indic-Transcribe launches on 5 September 2026</strong> — nine days from now. Built by IIT Madras / AI4Bharat with BodhanAI, 1.2 billion parameters, 26 Indian languages. Critically it ships a <strong>"Flex" variant built specifically for code-mixed and Romanized text</strong>. That is a purpose-built model for the exact failure we measured, arriving in a market where <strong>no AI wearable ships any Indic support at all</strong>.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">02 — State of the category</span>
+  <h2>One winner. Everything else acquired or buried.</h2>
+
+  <div class="sc">
+    <table>
+      <caption>AI note-taker hardware, August 2026</caption>
+      <thead><tr><th>Product</th><th>Status</th><th>What happened</th></tr></thead>
+      <tbody>
+        <tr><th>Plaud</th><td><span class="tag live">Thriving</span></td><td>2M+ devices, 170 countries, $100M software ARR, ~$2B valuation — bootstrapped</td></tr>
+        <tr><th>Limitless Pendant</th><td><span class="tag gone">Halted</span></td><td>Acquired by Meta Dec 2025; hardware pulled from sale, no roadmap</td></tr>
+        <tr><th>Bee</th><td><span class="tag mid">Absorbed</span></td><td>Acquired by Amazon Jul 2025; $19/mo subscription now free</td></tr>
+        <tr><th>Humane AI Pin</th><td><span class="tag gone">Dead</span></td><td>Servers off Feb 2025. HP paid $116M for patents and team — explicitly not the device</td></tr>
+        <tr><th>Rabbit R1</th><td><span class="tag mid">Niche</span></td><td>Alive, pivoted; never delivered the original promise</td></tr>
+        <tr><th>Omi</th><td><span class="tag live">Open source</span></td><td>$89 dev kit, 28 public repos, local processing, no mandatory subscription</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Read that as two separate signals. The category has <strong>proven demand</strong> — and it is <strong>consolidating into the hands of Meta, Amazon and one bootstrapped winner</strong>. Entering it as a hardware maker means competing with a company that has a two-million-unit head start and giants absorbing the runners-up.</p>
+
+  <h3>What Plaud proves</h3>
+
+  <div class="figs">
+    <div class="fig"><p class="fig-l">Devices shipped</p><p class="fig-v">2M+</p><p class="fig-n">Across 170 countries</p></div>
+    <div class="fig"><p class="fig-l">Software ARR</p><p class="fig-v p">$100M</p><p class="fig-n">June 2026. Software, not hardware</p></div>
+    <div class="fig"><p class="fig-l">Venture capital</p><p class="fig-v p">~$5M</p><p class="fig-n">Bootstrapped. Reportedly profitable</p></div>
+    <div class="fig"><p class="fig-l">Hardware price</p><p class="fig-v">$110</p><p class="fig-n">Subscription is the business, not the device</p></div>
+  </div>
+
+  <p>The lesson is not "build hardware." It is that <strong>a recurring subscription attached to conversation capture can reach $100M ARR without venture funding</strong>. The device is a delivery mechanism for the subscription. Software that captures conversations can charge the same way.</p>
+</section>
+
+<section>
+  <span class="snum">03 — Capture reality</span>
+  <h2>Where you can actually record, and where you can't</h2>
+
+  <p>Each platform has a hard ceiling, and in most cases it is set by store policy rather than engineering. This is the constraint that decides what gets built.</p>
+
+  <div class="sc">
+    <table>
+      <caption>What each client can capture</caption>
+      <thead><tr><th>Client</th><th>In-person talk</th><th>Browser meeting</th><th>Desktop-app meeting</th><th>Phone call</th></tr></thead>
+      <tbody>
+        <tr><th>Mac app (built)</th><td><span class="tag live">Yes</span></td><td><span class="tag live">Yes</span></td><td><span class="tag live">Yes</span></td><td><span class="tag gone">No</span></td></tr>
+        <tr><th>Mobile app</th><td><span class="tag live">Yes</span></td><td><span class="tag mid">Speaker only</span></td><td><span class="tag mid">Speaker only</span></td><td><span class="tag gone">Blocked</span></td></tr>
+        <tr><th>Web client</th><td><span class="tag gone">No</span></td><td><span class="tag live">Chromium</span></td><td><span class="tag gone">No</span></td><td><span class="tag gone">No</span></td></tr>
+        <tr><th>Wearable</th><td><span class="tag live">Yes</span></td><td><span class="tag mid">Speaker only</span></td><td><span class="tag mid">Speaker only</span></td><td><span class="tag mid">Speaker only</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>Mobile cannot tap call audio. At all.</strong> Android closed it at version 10 and Google banned the Accessibility-API workaround in 2022; <code>CAPTURE_AUDIO_OUTPUT</code> is signature-privileged and unavailable to Play apps. iOS has no API. Every product handles this identically — Otter, Plaud mobile and the Limitless pendant all just record ambient audio and ask you to use speakerphone.</p>
+
+  <p><strong>Web is stronger than expected but Chromium-only.</strong> Chrome and Edge can capture tab audio, so a web client gets <em>both sides</em> of a Meet or Zoom-web call with no bot and no download. Firefox and Safari return no audio at all. Capturing a desktop Zoom app from a browser on macOS is impossible without a virtual audio driver.</p>
+
+  <div class="box flag">
+    <h4>Which reframes what a mobile app would be</h4>
+    <p>Not "OmniPilot on your phone" for online meetings — that path is closed by policy. A mobile app is a recorder for <strong>in-person conversation</strong>: client visits, site inspections, doctor consultations, lectures, field sales. That is a different market from online meetings, and notably it is the one where Indian code-switching is <em>most</em> intense and where our screen-OCR advantage disappears entirely.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">04 — Incumbent weakness</span>
+  <h2>What people actually complain about</h2>
+
+  <p>Worth noting because it is not what you would guess. Accuracy is not the top complaint — <strong>billing is</strong>.</p>
+
+  <ul class="t">
+    <li><strong>Subscription dark patterns dominate the one-star reviews.</strong> Repeated, independent: <em>"the button to cancel subscription did not work"</em>, followed by <em>"we do not provide refunds on monthly subscriptions."</em> This is a trust wound across the category, and it is free to avoid.</li>
+    <li><strong>Crosstalk is the real accuracy failure.</strong> Clean-audio accuracy of 95–98% falls <strong>below 80%</strong> on real-world audio. Users describe brainstorms attributed to a hallucinated "Speaker 5" the moment two people talk at once.</li>
+    <li><strong>Free-tier erosion drives churn.</strong> <em>"I have been an Otter user since 2021 and they keep tightening the free tier while the paid price keeps going up."</em></li>
+    <li><strong>Granola's success is instructive</strong> — it is liked specifically because it <em>doesn't join calls as a visible bot</em>. Same architectural choice we made.</li>
+  </ul>
+
+  <div class="box">
+    <h4>The hallucination problem is quantified, and we already built the fix</h4>
+    <p>Research on Whisper found roughly <strong>1% of transcriptions contain entirely fabricated content nobody said</strong> — and of those fabrications, <strong>38% carried explicit harms</strong>: invented violence, false attributions, fabricated authority. That is the industry-wide version of what happened to us on 15 July, when two hours of near-silence produced a confident, wholly fictional set of notes.</p>
+    <p>We now refuse to summarise below a speech threshold, and we mark every figure <code>[OCR]</code> or <code>[audio]</code> so the reader knows what to trust. <strong>No competitor does either.</strong> Against a documented, quantified, harm-carrying industry failure, that is a real claim — not a feature bullet.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">05 — The cliff</span>
+  <h2>Always-on wearables are the worst legal position available</h2>
+
+  <p>A meeting has known participants who can be asked. A pendant in a shop, a bar or someone's living room captures strangers with <strong>no notice mechanism at all</strong>. That is a categorically harder problem than the one we already flagged for the desktop recorder.</p>
+
+  <ul class="t">
+    <li><strong>Twelve US states require all-party consent.</strong> One bystander in any of them and every recording is exposed.</li>
+    <li><strong>California SB 1130</strong>, amended 13 August 2026, is the first law written specifically for wearables — fines to $10,000, and it <strong>criminalizes disabling the recording indicator light</strong>. It legislates the LED itself.</li>
+    <li><strong>GDPR's household exemption collapses</strong> the moment the device leaves the home (<em>Ryneš</em>), so there is no "personal use" shelter for a wearable.</li>
+    <li><strong>The social backlash is physical.</strong> Friend's subway campaign had 90+ ads defaced — "SURVEILLANCE CAPITALISM." Soho House, Wetherspoons and ATG Theatres have all restricted smart glasses, treating them as hidden cameras. The Google Glass script is replaying a decade later.</li>
+  </ul>
+
+  <p>India is the exception, and it cuts both ways. Under DPDP as currently drafted, a wearer need not disclose recording to bystanders, and bystanders have no account and therefore <strong>no access, correction or erasure rights</strong>. That is permissive today. It is also a gap that could close quickly, and building a business on a rule likely to tighten is a poor bet.</p>
+
+  <div class="box warn">
+    <h4>One legitimate carve-out exists</h4>
+    <p>SB 1130 explicitly exempts <strong>disability-related devices</strong>. The deaf and hard-of-hearing market is real and funded — Rylo has raised over $100M, Ava $10M. But be honest about what it is: live captioning for face-to-face conversation is a <em>different product</em> from post-hoc meeting summarisation, with a different buyer. It is an adjacent business, not a positioning trick to dodge consent law.</p>
+  </div>
+</section>
+
+<section>
+  <span class="snum">06 — Options</span>
+  <h2>Three ways in</h2>
+
+  <div class="opts">
+
+    <div class="opt">
+      <span class="opt-l">Option A</span>
+      <span class="opt-h">Build a wearable</span>
+      <p>Fork Omi's open hardware ($89 dev kit, 28 repos) rather than starting from scratch. Pair it with Indic transcription.</p>
+      <p>Hardware supply chain, certification, returns, support — none of which we have done. Worst legal exposure. Competing with Plaud's two-million-unit head start and Meta and Amazon buying the rest.</p>
+      <span class="verdict">Not now. Revisit if software proves demand.</span>
+    </div>
+
+    <div class="opt pick">
+      <span class="opt-l">Option B — recommended</span>
+      <span class="opt-h">Hinglish-native software</span>
+      <p>Mobile app for in-person conversation, web client for browser meetings, existing Mac app for desktop calls. One backend, code-switching-native, sourced figures, no dark patterns.</p>
+      <p>Uses what exists: <strong>77% of the Swift Meetings module ports to iOS unchanged</strong>. No hardware risk. Legal exposure is the manageable meeting kind, not the bystander kind.</p>
+      <span class="verdict">Start here.</span>
+    </div>
+
+    <div class="opt">
+      <span class="opt-l">Option C</span>
+      <span class="opt-h">Vertical scribe</span>
+      <p>Pick one high-value profession — small-clinic doctors, lawyers, field sales — and build the whole workflow, not just notes.</p>
+      <p>Highest revenue per user in the entire category; Abridge is valued at $5.3B on clinical scribing. But it needs domain depth, and clinical carries its own regulatory weight.</p>
+      <span class="verdict">The real prize. Needs a design partner first.</span>
+    </div>
+
+  </div>
+
+  <p>Option B and Option C are sequential, not alternatives. Build the Hinglish-native capture layer, find which profession pulls hardest on it, then go deep on that one.</p>
+</section>
+
+<section>
+  <span class="snum">07 — Next two weeks</span>
+  <h2>What would actually de-risk this</h2>
+
+  <ul class="t">
+    <li><strong>5 September: test Indic-Transcribe the day it launches.</strong> Run it against the 9 August capture already on disk. The entire thesis rests on code-switching being solvable — this is the cheapest possible test of it, and the benchmark audio exists.</li>
+    <li><strong>Record five in-person conversations on a phone.</strong> Ambient mic, no special tooling. If mobile capture quality is unusable for real Indian meeting rooms, Option B dies early and cheaply.</li>
+    <li><strong>Talk to five people who'd pay.</strong> Consultants, clinic doctors, field sales. Not "would you use this" — "what do you do today, and what does it cost you." Nobody outside this building has asked for any of this yet.</li>
+    <li><strong>Price against the known floor.</strong> The category's centre of gravity is $15–25/month; Plaud Pro is $17.99. An India-first price of ₹499–999 sits well under it with room for real margin.</li>
+  </ul>
+
+  <div class="box">
+    <h4>The one-line version</h4>
+    <p>Don't build a wearable. Build the thing that understands how Indians actually speak — on a phone, in a browser, and on the Mac tool that already works — and let the first profession that pulls hardest tell you what to build next.</p>
+  </div>
+</section>
+
+<div class="foot">
+  <p><strong>Method.</strong> Six parallel research agents, 27 Aug 2026: wearable hardware landscape, market sizing, mobile OS and store constraints, browser capture limits, incumbent failure analysis, and the legal environment for always-on recording. The 33-vs-481 character comparison and the 77% Swift portability figure were measured directly on this machine, not sourced.</p>
+  <p><strong>Treat market-size figures with suspicion.</strong> Every TAM number in this space comes from a paywalled research firm, and firms disagree by two to five times on the same nominal category — which is why none of them appear as load-bearing claims above. The "AI wearables" figures look the most inflated, likely bundling smartwatches. Plaud's $100M ARR is software revenue and should not be conflated with the $250M annualized figure reported elsewhere. Legal content is research, not advice; the wearable path in particular needs counsel before any positioning ships.</p>
+  <p>Prepared by Soumya Swain · soumya@suryaai.co.in · Internal — Surya AI Technologies</p>
+</div>
+
+</div>
